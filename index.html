@@ -3,314 +3,380 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>IPO GMP & Fundamentals</title>
+  <title>IPO Premium - Live GMP & Allotment</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; -webkit-tap-highlight-color: transparent; }
-    .tab-active { border-bottom: 3px solid #16a34a; color: #16a34a; font-weight: 700; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; -webkit-tap-highlight-color: transparent; }
+    .tab-OPEN { border-bottom: 3px solid #16a34a; color: #16a34a; font-weight: 700; }
+    .tab-UPCOMING { border-bottom: 3px solid #f59e0b; color: #f59e0b; font-weight: 700; }
+    .tab-CLOSED { border-bottom: 3px solid #ef4444; color: #ef4444; font-weight: 700; }
   </style>
 </head>
-<body class="pb-20 text-gray-800">
+<body class="pb-24 text-gray-800 max-w-md mx-auto shadow-xl min-h-screen bg-[#f2f4f7]">
 
   <!-- Top Header -->
   <header class="bg-white sticky top-0 z-30 shadow-sm">
-    <div class="flex items-center justify-between px-4 py-3">
+    <div class="flex items-center justify-between px-3.5 py-2.5">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">IPO</div>
-        <div>
-          <h1 class="font-bold text-base leading-tight">IPO GMP & Fundamentals</h1>
-          <p id="lastUpdated" class="text-[11px] text-gray-400">Updating live data...</p>
-        </div>
+        <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-700">☰</div>
+        <button onclick="openLiveSubOverview()" class="flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> Live Subscription
+        </button>
       </div>
       <div class="flex items-center gap-2">
-        <span class="flex items-center gap-1 bg-red-50 text-red-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-red-100">
-          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> Live GMP
-        </span>
+        <button onclick="toggleSearch()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm">🔍</button>
+        <button onclick="loadData()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm">🔄</button>
       </div>
     </div>
 
-    <!-- Status Tabs -->
-    <div class="grid grid-cols-3 text-center border-t border-b border-gray-100 text-xs font-semibold text-gray-500 bg-white">
-      <button onclick="setStatus('OPEN')" id="tab-OPEN" class="py-3 tab-active">OPEN</button>
-      <button onclick="setStatus('UPCOMING')" id="tab-UPCOMING" class="py-3">UPCOMING</button>
-      <button onclick="setStatus('CLOSED')" id="tab-CLOSED" class="py-3">CLOSED</button>
+    <!-- Search Bar (Hidden by default) -->
+    <div id="searchBox" class="hidden px-3.5 pb-2">
+      <input type="text" id="searchInput" oninput="renderList()" placeholder="Search Mainboard or SME IPO..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
     </div>
 
-    <!-- Category Filters & Search -->
-    <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200 gap-2">
-      <div class="flex items-center gap-3 text-xs font-bold">
-        <label class="flex items-center gap-1.5 cursor-pointer">
-          <input type="checkbox" id="chkMainboard" checked onchange="renderList()" class="w-4 h-4 accent-gray-800 rounded">
+    <!-- 3 Status Tabs -->
+    <div class="grid grid-cols-3 text-center border-t border-b border-gray-200 text-xs font-bold text-gray-500 bg-white">
+      <button onclick="setStatus('OPEN')" id="btn-OPEN" class="py-3 tab-OPEN">OPEN</button>
+      <button onclick="setStatus('UPCOMING')" id="btn-UPCOMING" class="py-3">UPCOMING</button>
+      <button onclick="setStatus('CLOSED')" id="btn-CLOSED" class="py-3">CLOSED</button>
+    </div>
+
+    <!-- Mainboard & SME Filter -->
+    <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200 text-xs font-bold">
+      <div class="flex items-center gap-5">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="chkMainboard" checked onchange="renderList()" class="w-4 h-4 accent-gray-700 rounded">
           <span>MAINBOARD</span>
         </label>
-        <label class="flex items-center gap-1.5 cursor-pointer">
-          <input type="checkbox" id="chkSme" checked onchange="renderList()" class="w-4 h-4 accent-gray-800 rounded">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="chkSme" checked onchange="renderList()" class="w-4 h-4 accent-gray-700 rounded">
           <span>SME</span>
         </label>
       </div>
-      <input type="text" id="searchInput" oninput="renderList()" placeholder="Search IPO..." class="bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs w-36 focus:outline-none focus:border-blue-500">
+      <span id="lastUpdated" class="text-[10px] text-gray-400 font-normal">Syncing...</span>
     </div>
   </header>
 
-  <!-- IPO Cards Container -->
-  <main id="ipoList" class="p-3 space-y-3 max-w-md mx-auto">
-    <div class="text-center py-10 text-gray-400 text-sm">Loading Live IPO Data...</div>
+  <!-- Main IPO List -->
+  <main id="ipoList" class="p-3 space-y-3.5">
+    <div class="text-center py-12 text-gray-400 text-sm">Loading Live IPO Data...</div>
   </main>
 
-  <!-- Detail Modal (Fundamentals + Advanced GMP) -->
-  <div id="detailModal" class="fixed inset-0 bg-black/50 z-50 hidden flex-col justify-end sm:justify-center">
-    <div class="bg-gray-100 w-full max-w-md mx-auto rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-y-auto shadow-2xl">
-      <!-- Modal Top Bar -->
-      <div class="bg-white sticky top-0 px-4 py-3 border-b flex items-center justify-between z-10">
-        <h2 id="modalTitle" class="font-bold text-sm truncate pr-4">Company Details</h2>
-        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 font-bold text-gray-600">✕</button>
+  <!-- Full Detail Screen Modal -->
+  <div id="detailScreen" class="fixed inset-0 bg-[#f2f4f7] z-50 hidden flex-col max-w-md mx-auto overflow-y-auto">
+    <!-- Top Back Bar -->
+    <div class="bg-white sticky top-0 px-3.5 py-3 border-b flex items-center justify-between z-20 shadow-sm">
+      <div class="flex items-center gap-2.5 overflow-hidden">
+        <button onclick="closeDetail()" class="text-xl font-bold px-1">‹</button>
+        <h2 id="detailHeaderTitle" class="font-bold text-sm uppercase truncate">COMPANY DETAILS</h2>
       </div>
+      <button id="detailShareBtn" class="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm shrink-0">↗</button>
+    </div>
 
-      <div id="modalBody" class="p-3 space-y-3"></div>
+    <div id="detailContent" class="p-3 space-y-3 pb-24"></div>
+
+    <!-- Bottom Apply Bar -->
+    <div class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t p-3 z-30">
+      <button id="detailApplyBtn" class="w-full py-3 rounded-full bg-gray-800 text-white font-bold text-xs tracking-wider uppercase shadow">
+        APPLY IPO NOW
+      </button>
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
-  <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around py-2 text-[11px] font-semibold text-gray-500 z-30 max-w-md mx-auto">
-    <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-600">
+  <!-- Apply Broker / UPI Modal -->
+  <div id="applyModal" class="fixed inset-0 bg-black/60 z-50 hidden items-end justify-center max-w-md mx-auto">
+    <div class="bg-white w-full rounded-t-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="applyTitle" class="font-bold text-sm">Apply IPO via Broker / ASBA</h3>
+        <button onclick="closeApplyModal()" class="text-gray-500 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-gray-500">Select your Demat broker to place your UPI IPO bid directly:</p>
+      <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
+        <a href="https://kite.zerodha.com/ipo" target="_blank" class="p-3 border rounded-xl text-center bg-orange-50 text-orange-700 border-orange-200">Zerodha Kite</a>
+        <a href="https://groww.in/ipo" target="_blank" class="p-3 border rounded-xl text-center bg-emerald-50 text-emerald-700 border-emerald-200">Groww IPO</a>
+        <a href="https://www.angelone.in/ipo" target="_blank" class="p-3 border rounded-xl text-center bg-blue-50 text-blue-700 border-blue-200">Angel One</a>
+        <a href="https://upstox.com/ipo/" target="_blank" class="p-3 border rounded-xl text-center bg-purple-50 text-purple-700 border-purple-200">Upstox IPO</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allotment Status Modal -->
+  <div id="allotmentModal" class="fixed inset-0 bg-black/60 z-50 hidden items-end justify-center max-w-md mx-auto">
+    <div class="bg-white w-full rounded-t-2xl p-4 space-y-3 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm">Check Live IPO Allotment Status</h3>
+        <button onclick="document.getElementById('allotmentModal').classList.add('hidden')" class="text-gray-500 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-gray-500">Tap the official IPO Registrar below and enter your PAN / Application No:</p>
+      <div class="space-y-2 text-xs font-bold">
+        <a href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50 hover:bg-blue-50">1. Link Intime (MUFG Intime) ↗</a>
+        <a href="https://kosmic.kfintech.com/ipostatus/" target="_blank" class="block p-3 border rounded-xl bg-gray-50 hover:bg-blue-50">2. KFin Technologies (KFinTech) ↗</a>
+        <a href="https://ipo.bigshareonline.com/ipo_status.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50 hover:bg-blue-50">3. Bigshare Services Pvt Ltd ↗</a>
+        <a href="https://www.skylinerta.com/ipo.php" target="_blank" class="block p-3 border rounded-xl bg-gray-50 hover:bg-blue-50">4. Skyline Financial Services ↗</a>
+        <a href="https://maashitla.com/allotment-status/public-issues" target="_blank" class="block p-3 border rounded-xl bg-gray-50 hover:bg-blue-50">5. Maashitla Securities ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t border-gray-200 flex justify-around items-center py-2 text-[11px] font-semibold text-gray-500 z-30">
+    <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-500">
       <span class="text-lg">🏠</span><span>IPO</span>
     </button>
-    <button onclick="openCalcModal()" class="flex flex-col items-center">
-      <span class="text-lg">🧮</span><span>GMP Calc</span>
+    <button onclick="openLiveSubOverview()" class="flex flex-col items-center">
+      <span class="text-lg">📊</span><span>Live Sub</span>
     </button>
-    <button onclick="alert('Allotment links will open directly on listing allotment date!')" class="flex flex-col items-center">
+    <button onclick="openAllotmentModal()" class="flex flex-col items-center">
       <span class="text-lg">📢</span><span>Allotment</span>
     </button>
   </nav>
 
   <script>
     let allIpos = [];
-    let currentStatus = 'OPEN';
+    let currentTab = 'OPEN';
 
     async function loadData() {
       try {
         const res = await fetch('ipo_data.json?t=' + Date.now());
-        const data = await res.json();
-        allIpos = data.ipos || [];
-        document.getElementById('lastUpdated').innerText = 'Updated: ' + (data.last_updated || 'Just now');
-        
-        // Jo OPEN ma koi IPO na hoy to automatic UPCOMING dekhadse
-        const hasOpen = allIpos.some(i => i.status === 'OPEN');
-        if (!hasOpen && allIpos.length > 0) {
-          setStatus('UPCOMING');
-        } else {
-          renderList();
-        }
+        const json = await res.json();
+        allIpos = json.ipos || [];
+        document.getElementById('lastUpdated').innerText = json.last_updated || '';
+        renderList();
       } catch (e) {
-        document.getElementById('ipoList').innerHTML = '<div class="text-center py-10 text-red-500 text-sm">Failed to load data. Refresh page.</div>';
+        document.getElementById('ipoList').innerHTML = '<div class="bg-white p-6 rounded-2xl text-center text-xs text-red-500">Data sync pending. Run GitHub Action once.</div>';
       }
     }
 
-    function setStatus(status) {
-      currentStatus = status;
-      ['OPEN', 'UPCOMING', 'CLOSED'].forEach(s => {
-        const el = document.getElementById('tab-' + s);
-        if (s === status) el.classList.add('tab-active');
-        else el.classList.remove('tab-active');
+    function setStatus(st) {
+      currentTab = st;
+      ['OPEN', 'UPCOMING', 'CLOSED'].forEach(t => {
+        const b = document.getElementById('btn-' + t);
+        b.className = 'py-3 ' + (t === st ? 'tab-' + t : '');
       });
       renderList();
     }
 
+    function toggleSearch() {
+      document.getElementById('searchBox').classList.toggle('hidden');
+    }
+
     function renderList() {
-      const showMain = document.getElementById('chkMainboard').checked;
-      const showSme = document.getElementById('chkSme').checked;
-      const query = document.getElementById('searchInput').value.toLowerCase();
+      const mainOk = document.getElementById('chkMainboard').checked;
+      const smeOk = document.getElementById('chkSme').checked;
+      const q = document.getElementById('searchInput').value.toLowerCase();
 
-      const filtered = allIpos.filter(ipo => {
-        const matchStatus = ipo.status === currentStatus;
-        const matchCat = (ipo.category === 'MAINBOARD' && showMain) || (ipo.category === 'SME' && showSme);
-        const matchSearch = ipo.name.toLowerCase().includes(query);
-        return matchStatus && matchCat && matchSearch;
-      });
+      const list = allIpos.filter(i =>
+        i.status === currentTab &&
+        ((i.category === 'MAINBOARD' && mainOk) || (i.category === 'SME' && smeOk)) &&
+        i.name.toLowerCase().includes(q)
+      );
 
-      const container = document.getElementById('ipoList');
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-sm shadow-sm">No ${currentStatus} IPOs found in selected filter.</div>`;
+      const box = document.getElementById('ipoList');
+      if (!list.length) {
+        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">No ${currentTab} IPOs right now. Check UPCOMING or CLOSED tab.</div>`;
         return;
       }
 
-      container.innerHTML = filtered.map(ipo => {
-        const gmpColor = ipo.gmp > 0 ? 'text-green-600' : 'text-gray-500';
-        const badgeColor = ipo.category === 'SME' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+      box.innerHTML = list.map(ipo => {
+        const actionBtn = ipo.status === 'OPEN'
+          ? `<button onclick="openApplyModal('${ipo.name}')" class="flex-1 py-2.5 rounded-full bg-[#4a4a4a] text-white font-bold text-xs tracking-wide">APPLY</button>`
+          : ipo.status === 'CLOSED'
+          ? `<button onclick="openAllotmentModal()" class="flex-1 py-2.5 rounded-full bg-blue-600 text-white font-bold text-xs tracking-wide">ALLOTMENT</button>`
+          : `<button onclick="openApplyModal('${ipo.name}')" class="flex-1 py-2.5 rounded-full bg-amber-500 text-white font-bold text-xs tracking-wide">PRE-APPLY</button>`;
+
         return `
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative overflow-hidden">
           <div class="flex justify-between items-start gap-2 mb-3">
             <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${ipo.name}</h3>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badgeColor}">${ipo.category}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700 shrink-0">${ipo.category}</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-y-1.5 text-xs border-b border-gray-100 pb-3">
-            <span class="text-gray-500">Offer Date:</span>
-            <span class="font-semibold text-right">${ipo.date_range}</span>
-            <span class="text-gray-500">Price Band:</span>
-            <span class="font-semibold text-right">${ipo.price}</span>
-            <span class="text-gray-500">Lot Size:</span>
-            <span class="font-semibold text-right">${ipo.lot_size} Shares</span>
-            <span class="text-gray-500">Issue Size:</span>
-            <span class="font-semibold text-right">${ipo.issue_size}</span>
+          <div class="space-y-1.5 text-xs border-b border-gray-100 pb-3">
+            <div class="flex justify-between"><span class="text-gray-500">Date:</span><span class="font-bold text-gray-900">${ipo.date_range}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Price:</span><span class="font-bold text-gray-900">${ipo.price}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Lot Size:</span><span class="font-bold text-gray-900">${ipo.lot_size}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Issue Size:</span><span class="font-bold text-gray-900">${ipo.issue_size}</span></div>
           </div>
 
-          <div class="grid grid-cols-2 gap-y-1.5 text-xs border-b border-gray-100 py-3">
-            <span class="text-gray-500 font-medium">GMP Rumors*:</span>
-            <span class="font-bold text-sm text-right ${gmpColor}">₹${ipo.gmp} (${ipo.gmp_percent}%)</span>
-            <span class="text-gray-500">Est. Listing:</span>
-            <span class="font-bold text-right text-gray-800">₹${ipo.est_listing}</span>
+          <div class="space-y-1.5 text-xs border-b border-gray-100 py-3">
+            <div class="flex justify-between"><span class="text-gray-500">GMP Rumors*:</span><span class="font-bold text-green-600">₹${ipo.gmp} (${ipo.gmp_percent}%)</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Last Heard:</span><span class="font-semibold text-gray-800">${ipo.last_heard}</span></div>
           </div>
 
-          <div class="grid grid-cols-2 gap-y-1.5 text-xs py-3">
-            <span class="text-gray-500">Listing Date:</span>
-            <span class="font-semibold text-right">${ipo.listing_date}</span>
-            <span class="text-gray-500">GMP x Lot (Retail)*:</span>
-            <span class="font-bold text-right text-green-700">₹${ipo.retail_profit.toLocaleString('en-IN')}</span>
-            <span class="text-gray-500">GMP x Lots (HNI)*:</span>
-            <span class="font-bold text-right text-green-700">₹${ipo.hni_profit.toLocaleString('en-IN')}</span>
+          <div class="space-y-1.5 text-xs py-3">
+            <div class="flex justify-between"><span class="text-gray-500">Allotment Date:</span><span class="font-bold text-gray-900">${ipo.allotment_date}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Listing Date:</span><span class="font-bold text-gray-900">${ipo.listing_date}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (IND)*:</span><span class="font-bold text-gray-900">₹${ipo.gmp_ind.toLocaleString('en-IN')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (HNI)*:</span><span class="font-bold text-gray-900">₹${ipo.gmp_hni.toLocaleString('en-IN')}</span></div>
           </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <button onclick="openDetails(${ipo.id})" class="flex-1 py-2.5 rounded-full border-2 border-gray-800 font-bold text-xs tracking-wide hover:bg-gray-50">
-              VIEW FUNDAMENTALS
-            </button>
-            <button onclick="shareIpo('${ipo.name}', ${ipo.gmp}, ${ipo.gmp_percent})" class="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold">
-              ↗
-            </button>
+          <div class="flex items-center gap-2.5 pt-1">
+            <button onclick="openDetail(${ipo.id})" class="flex-1 py-2.5 rounded-full border-2 border-gray-700 font-bold text-xs tracking-wide text-gray-900">VIEW</button>
+            <button onclick="shareText('${ipo.name}', ${ipo.gmp}, ${ipo.gmp_percent})" class="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold shrink-0">↗</button>
+            ${actionBtn}
           </div>
-          <p class="text-[10px] text-gray-400 mt-2">* Info is indicative, not an investment advice.</p>
+
+          <p class="text-[10px] text-gray-400 mt-2.5">* Info is indicative, not an investment advice.</p>
         </div>`;
       }).join('');
     }
 
-    function openDetails(id) {
+    function openDetail(id) {
       const ipo = allIpos.find(x => x.id === id);
       if (!ipo) return;
-      const f = ipo.fundamentals;
-      document.getElementById('modalTitle').innerText = ipo.name;
 
-      document.getElementById('modalBody').innerHTML = `
-        <!-- Overview Card -->
-        <div class="bg-white rounded-xl p-3.5 shadow-sm">
-          <div class="text-xs font-bold text-gray-400 uppercase mb-2">IPO Overview & GMP</div>
-          <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-100 mb-3">
+      document.getElementById('detailHeaderTitle').innerText = ipo.name;
+      document.getElementById('detailApplyBtn').onclick = () => openApplyModal(ipo.name);
+      document.getElementById('detailShareBtn').onclick = () => shareText(ipo.name, ipo.gmp, ipo.gmp_percent);
+
+      const subHtml = (ipo.subscription_table || []).map(r => `
+        <tr class="border-t border-gray-100 text-xs">
+          <td class="py-2 px-2 font-semibold text-left">${r.category}</td>
+          <td class="py-2 px-2 text-right">${r.offered}</td>
+          <td class="py-2 px-2 text-right">${r.applied}</td>
+          <td class="py-2 px-2 text-right font-bold text-blue-600">${r.times}</td>
+        </tr>`).join('');
+
+      const lotHtml = (ipo.lot_distribution || []).map(l => `
+        <td class="py-2 px-2 text-center border-l border-gray-100">
+          <div class="font-bold text-gray-900">${l.shares.toLocaleString('en-IN')}</div>
+          <div class="text-[11px] text-gray-500 mt-1">₹${l.amt.toLocaleString('en-IN')}</div>
+          <div class="text-[11px] font-semibold text-blue-600 mt-1">${l.lots} Lots</div>
+        </td>`).join('');
+
+      const f = ipo.fundamentals || {};
+
+      document.getElementById('detailContent').innerHTML = `
+        <!-- Key Dates Timeline -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <span class="font-bold text-sm">📅 Key Dates</span>
+            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600">${ipo.status}</span>
+          </div>
+          <div class="grid grid-cols-4 text-center text-[11px] relative">
+            <div><div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1"></div><div class="font-bold">Open</div><div class="text-gray-500">${ipo.open_date}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1"></div><div class="font-bold">Close</div><div class="text-gray-500">${ipo.close_date}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-gray-300 mx-auto mb-1"></div><div class="font-bold">Allotment</div><div class="text-gray-500">${ipo.allotment_date}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-gray-300 mx-auto mb-1"></div><div class="font-bold">Listing</div><div class="text-gray-500">${ipo.listing_date}</div></div>
+          </div>
+        </div>
+
+        <!-- GMP & Profit Box -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex justify-between items-center">
             <div>
-              <div class="text-xs text-gray-500">Current GMP</div>
+              <div class="text-xs text-gray-500">Live GMP Rumors</div>
               <div class="text-xl font-extrabold text-green-600">₹${ipo.gmp} (${ipo.gmp_percent}%)</div>
+              <div class="text-[10px] text-gray-400">Last Heard: ${ipo.last_heard}</div>
             </div>
             <div class="text-right">
-              <div class="text-xs text-gray-500">Expected Listing</div>
+              <div class="text-xs text-gray-500">Est. Listing Price</div>
               <div class="text-lg font-bold text-gray-900">₹${ipo.est_listing}</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div class="bg-gray-50 p-2 rounded">Price: <b>${ipo.price}</b></div>
-            <div class="bg-gray-50 p-2 rounded">Lot Size: <b>${ipo.lot_size}</b></div>
-            <div class="bg-gray-50 p-2 rounded">Retail Profit: <b class="text-green-600">₹${ipo.retail_profit}</b></div>
-            <div class="bg-gray-50 p-2 rounded">Subscription: <b class="text-blue-600">${ipo.subscription}</b></div>
-          </div>
-        </div>
-
-        <!-- Company Fundamentals Card -->
-        <div class="bg-white rounded-xl p-3.5 shadow-sm">
-          <div class="flex justify-between items-center mb-3">
-            <span class="font-bold text-sm">Company Fundamentals</span>
-            <span class="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">${f.score} - ${f.rating}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2.5 text-center">
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">P/E Ratio</div>
-              <div class="font-bold text-sm">${f.pe}</div>
-            </div>
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">EPS</div>
-              <div class="font-bold text-sm">${f.eps}</div>
-            </div>
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">RoNW / RoE</div>
-              <div class="font-bold text-sm text-green-600">${f.roe}</div>
-            </div>
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">Debt-to-Equity</div>
-              <div class="font-bold text-sm">${f.debt_equity}</div>
-            </div>
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">PAT (Profit)</div>
-              <div class="font-bold text-sm">${f.pat}</div>
-            </div>
-            <div class="border rounded-lg p-2">
-              <div class="text-[11px] text-gray-400">Revenue</div>
-              <div class="font-bold text-sm">${f.revenue}</div>
+              <div class="text-[11px] font-semibold text-green-700">Retail Profit: ₹${ipo.gmp_ind.toLocaleString('en-IN')}</div>
             </div>
           </div>
         </div>
 
-        <!-- Pros & Cons -->
-        <div class="bg-white rounded-xl p-3.5 shadow-sm">
-          <div class="font-bold text-sm mb-2">Why to Apply? (Pros & Cons)</div>
-          <div class="space-y-1.5 text-xs">
-            ${ipo.pros.map(p => `<div class="flex gap-2 text-green-700"><span>✔</span><span>${p}</span></div>`).join('')}
-            ${ipo.cons.map(c => `<div class="flex gap-2 text-red-600"><span>✖</span><span>${c}</span></div>`).join('')}
+        <!-- Live Subscription Details -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="font-bold text-sm mb-1">📈 Live Subscription</div>
+          <div class="text-[11px] text-gray-400 mb-3">Last updated: ${ipo.last_heard}</div>
+          <table class="w-full border border-gray-100 rounded-xl overflow-hidden">
+            <thead class="bg-gray-100 text-[11px] text-gray-600">
+              <tr>
+                <th class="py-2 px-2 text-left">Category</th>
+                <th class="py-2 px-2 text-right">Offered</th>
+                <th class="py-2 px-2 text-right">Applied</th>
+                <th class="py-2 px-2 text-right">Times</th>
+              </tr>
+            </thead>
+            <tbody>${subHtml}</tbody>
+          </table>
+        </div>
+
+        <!-- Lot(s) Distribution -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="font-bold text-sm mb-3">💠 Lot(s) Distribution</div>
+          <table class="w-full border border-gray-100 text-xs">
+            <thead class="bg-gray-100 text-[11px]">
+              <tr>
+                <th class="py-2 px-2 text-left">Category</th>
+                <th class="py-2 px-2 text-center">Individual</th>
+                <th class="py-2 px-2 text-center">sHNI</th>
+                <th class="py-2 px-2 text-center">bHNI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="py-2 px-2 font-semibold text-[11px] text-gray-500">
+                  <div>Min. Share</div>
+                  <div class="mt-1">Min. Amt.</div>
+                  <div class="mt-1">Total Lots</div>
+                </td>
+                ${lotHtml}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Company Fundamentals -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="font-bold text-sm mb-3">🏢 Company Fundamentals</div>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">P/E Ratio</div><div class="font-bold">${f.pe || 'N/A'}</div></div>
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">EPS</div><div class="font-bold">${f.eps || 'N/A'}</div></div>
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">RoE / RoNW</div><div class="font-bold text-green-600">${f.roe || 'N/A'}</div></div>
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">Debt/Equity</div><div class="font-bold">${f.debt || 'N/A'}</div></div>
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">PAT</div><div class="font-bold">${f.pat || 'N/A'}</div></div>
+            <div class="bg-gray-50 p-2 rounded-lg"><div class="text-[10px] text-gray-400">Revenue</div><div class="font-bold">${f.revenue || 'N/A'}</div></div>
           </div>
         </div>
+
+        <!-- Direct Allotment Check Button -->
+        <a href="${ipo.registrar?.url || '#'}" target="_blank" class="block w-full py-3 rounded-xl bg-amber-500 text-white text-center font-bold text-xs shadow">
+          CHECK ALLOTMENT ON ${(ipo.registrar?.name || 'REGISTRAR').toUpperCase()} ↗
+        </a>
       `;
 
-      document.getElementById('detailModal').classList.remove('hidden');
-      document.getElementById('detailModal').classList.add('flex');
+      document.getElementById('detailScreen').classList.remove('hidden');
+      document.getElementById('detailScreen').classList.add('flex');
     }
 
-    function openCalcModal() {
-      document.getElementById('modalTitle').innerText = 'IPO Profit Calculator';
-      document.getElementById('modalBody').innerHTML = `
-        <div class="bg-white rounded-xl p-4 space-y-3 text-xs">
-          <div>
-            <label class="font-bold block mb-1">Current GMP (₹)</label>
-            <input type="number" id="cGmp" value="25" oninput="calcProfit()" class="w-full border rounded-lg p-2 text-sm font-bold">
-          </div>
-          <div>
-            <label class="font-bold block mb-1">Lot Size (Shares)</label>
-            <input type="number" id="cLot" value="100" oninput="calcProfit()" class="w-full border rounded-lg p-2 text-sm font-bold">
-          </div>
-          <div>
-            <label class="font-bold block mb-1">Number of Lots</label>
-            <input type="number" id="cNum" value="1" oninput="calcProfit()" class="w-full border rounded-lg p-2 text-sm font-bold">
-          </div>
-          <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
-            <div class="text-gray-500">Estimated Listing Gain</div>
-            <div id="cRes" class="text-2xl font-extrabold text-green-600 mt-1">₹2,500</div>
-          </div>
-        </div>
-      `;
-      document.getElementById('detailModal').classList.remove('hidden');
-      document.getElementById('detailModal').classList.add('flex');
+    function closeDetail() {
+      document.getElementById('detailScreen').classList.add('hidden');
+      document.getElementById('detailScreen').classList.remove('flex');
     }
 
-    function calcProfit() {
-      const g = parseFloat(document.getElementById('cGmp').value) || 0;
-      const l = parseFloat(document.getElementById('cLot').value) || 0;
-      const n = parseFloat(document.getElementById('cNum').value) || 0;
-      document.getElementById('cRes').innerText = '₹' + (g * l * n).toLocaleString('en-IN');
+    function openApplyModal(name) {
+      document.getElementById('applyTitle').innerText = 'Apply: ' + name;
+      document.getElementById('applyModal').classList.remove('hidden');
+      document.getElementById('applyModal').classList.add('flex');
     }
 
-    function closeModal() {
-      document.getElementById('detailModal').classList.add('hidden');
-      document.getElementById('detailModal').classList.remove('flex');
+    function closeApplyModal() {
+      document.getElementById('applyModal').classList.add('hidden');
+      document.getElementById('applyModal').classList.remove('flex');
     }
 
-    function shareIpo(name, gmp, pct) {
-      const text = `${name} Live GMP: ₹${gmp} (${pct}%). Check full fundamentals on our IPO App!`;
-      if (navigator.share) navigator.share({ title: name, text });
-      else alert(text);
+    function openAllotmentModal() {
+      document.getElementById('allotmentModal').classList.remove('hidden');
+      document.getElementById('allotmentModal').classList.add('flex');
     }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+    function openLiveSubOverview() {
+      setStatus('OPEN');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function shareText(name, gmp, pct) {
+      const txt = `${name} Live GMP: ₹${gmp} (${pct}%). Check Live Subscription & Allotment on our IPO App!`;
+      if (navigator.share) navigator.share({ title: name, text: txt });
+      else alert(txt);
+    }
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
     loadData();
   </script>
 </body>
