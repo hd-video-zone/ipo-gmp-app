@@ -143,7 +143,7 @@
     let allIpos = [];
     let currentTab = 'OPEN';
     let savedNames = JSON.parse(localStorage.getItem('savedIpos') || '[]');
-    let logoCache = JSON.parse(localStorage.getItem('logoCache_v3') || '{}');
+    let logoCache = JSON.parse(localStorage.getItem('logoCache_v4') || '{}');
     let activeCalcIpo = null;
     let calcLots = 1;
 
@@ -264,6 +264,23 @@
       return 'UPCOMING';
     }
 
+    // Background mein automatically sabhi IPOs ke detail pages se real company logos fetch karna
+    async function autoFetchAllLogos(ipos) {
+      for (const ipo of ipos) {
+        if (logoCache[ipo.name]) continue;
+        const autoSlug = ipo.slug || ipo.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-ipo';
+        const fetchUrl = ipo.ipoId
+          ? `${WORKER_URL}?mode=detail&id=${ipo.ipoId}&slug=${autoSlug}`
+          : `${WORKER_URL}?mode=detail&id=1&slug=${autoSlug}`;
+        try {
+          const res = await fetch(fetchUrl);
+          const html = await res.text();
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          extractRealLogoFromDoc(doc, ipo.name);
+        } catch (e) {}
+      }
+    }
+
     async function fetchLiveFromWorker() {
       document.getElementById('lastUpdated').innerText = 'Syncing Live...';
       try {
@@ -381,6 +398,7 @@
         const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         document.getElementById('lastUpdated').innerText = `Live (${parsed.length}) • ${nowTime}`;
         renderList();
+        autoFetchAllLogos(parsed);
       } catch (e) {
         document.getElementById('lastUpdated').innerText = 'Retry Sync';
       }
@@ -414,7 +432,7 @@
           const fullLogo = rawSrc.startsWith('http') ? rawSrc : 'https://www.investorgain.com' + (rawSrc.startsWith('/') ? '' : '/') + rawSrc;
           if (isValidRealLogo(fullLogo)) {
             logoCache[companyName] = fullLogo;
-            localStorage.setItem('logoCache_v3', JSON.stringify(logoCache));
+            localStorage.setItem('logoCache_v4', JSON.stringify(logoCache));
             const box = document.getElementById('detailLogoBox');
             if (box) box.innerHTML = `<img src="${fullLogo}" class="w-10 h-10 object-contain">`;
             renderList();
@@ -453,7 +471,7 @@
 
         const logoHtml = realLogo
           ? `<div class="w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 overflow-hidden bg-white">
-               <img src="${realLogo}" class="w-8 h-8 object-contain">
+               <img src="${realLogo}" class="w-9 h-9 object-contain">
              </div>`
           : `<div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${ipo.logo.cls}">${ipo.logo.initials}</div>`;
 
