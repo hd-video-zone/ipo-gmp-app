@@ -1,5 +1,5 @@
 {
-  "last_updated": "25 Nov, 09:59 AM",
+  "last_updated": "25 Nov, 10:11 AM",
   "total": 10,
   "ipos": [
     {
@@ -7,36 +7,36 @@
       "name": "Crystal Crop Protection",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "18 Nov - 20 Nov",
-      "price": "+₹ 18",
-      "upper_price": 18.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 18.0,
+      "gmp_percent": 0,
       "est_listing": 18.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 1530.0,
+      "hni_profit": 21420.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -44,36 +44,36 @@
       "name": "Mahanadi Coalfields",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "19 Nov - 23 Nov",
-      "price": "₹0",
-      "upper_price": 0.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
+      "issue_size": "TBA",
+      "gmp": 0.0,
       "gmp_percent": 0,
       "est_listing": 0.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 0.0,
+      "hni_profit": 0.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -81,36 +81,36 @@
       "name": "Watrana Rentals",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "19 Nov - 23 Nov",
-      "price": "+₹ 41",
-      "upper_price": 41.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 41.0,
+      "gmp_percent": 0,
       "est_listing": 41.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 3485.0,
+      "hni_profit": 48790.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -118,36 +118,36 @@
       "name": "Shree Siddhivinayak Greentech Industries",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "25 Nov - 27 Nov",
-      "price": "+₹ 20",
-      "upper_price": 20.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 20.0,
+      "gmp_percent": 0,
       "est_listing": 20.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 1700.0,
+      "hni_profit": 23800.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -155,36 +155,36 @@
       "name": "Foodlink F&B Holdings",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "26 Nov - 30 Nov",
-      "price": "+₹ 27",
-      "upper_price": 27.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 27.0,
+      "gmp_percent": 0,
       "est_listing": 27.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 2295.0,
+      "hni_profit": 32130.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -192,36 +192,36 @@
       "name": "Integris Medtech",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "27 Nov - 1 Dec",
-      "price": "₹0",
-      "upper_price": 0.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
+      "issue_size": "TBA",
+      "gmp": 0.0,
       "gmp_percent": 0,
       "est_listing": 0.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 0.0,
+      "hni_profit": 0.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -229,36 +229,36 @@
       "name": "Airpro Technology",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "27 Nov - 1 Dec",
-      "price": "+₹ 4",
-      "upper_price": 4.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 4.0,
+      "gmp_percent": 0,
       "est_listing": 4.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 340.0,
+      "hni_profit": 4760.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -266,36 +266,36 @@
       "name": "A J Packaging",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "1 Dec - 3 Dec",
-      "price": "+₹ 24",
-      "upper_price": 24.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 24.0,
+      "gmp_percent": 0,
       "est_listing": 24.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 2040.0,
+      "hni_profit": 28560.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -303,36 +303,36 @@
       "name": "Matangi Rubber",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "1 Dec - 3 Dec",
-      "price": "+₹ 21",
-      "upper_price": 21.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 21.0,
+      "gmp_percent": 0,
       "est_listing": 21.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 1785.0,
+      "hni_profit": 24990.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     },
     {
@@ -340,36 +340,36 @@
       "name": "Monomark Engineering",
       "category": "MAINBOARD",
       "status": "UPCOMING",
-      "date_range": "2 Dec - 4 Dec",
-      "price": "+₹ 21",
-      "upper_price": 21.0,
+      "date_range": "25 Nov 2026",
+      "price": "TBA",
+      "upper_price": 0,
       "lot_size": 85,
-      "issue_size": "₹125 Cr",
-      "gmp": 0,
-      "gmp_percent": 0.0,
+      "issue_size": "TBA",
+      "gmp": 21.0,
+      "gmp_percent": 0,
       "est_listing": 21.0,
       "allotment_date": "TBA",
       "listing_date": "TBA",
-      "retail_profit": 0,
-      "hni_profit": 0,
-      "subscription": "1.40x",
+      "retail_profit": 1785.0,
+      "hni_profit": 24990.0,
+      "subscription": "Live",
       "fundamentals": {
         "score": "7.5/10",
-        "rating": "Strong Fundamentals",
-        "pe": "17.8",
-        "eps": "₹3.95",
-        "roe": "16.9%",
-        "debt_equity": "0.41",
-        "pat": "₹13.5 Cr",
-        "revenue": "₹148 Cr",
-        "nav": "₹17.80"
+        "rating": "Good Fundamentals",
+        "pe": "N/A",
+        "eps": "N/A",
+        "roe": "N/A",
+        "debt_equity": "N/A",
+        "pat": "N/A",
+        "revenue": "N/A",
+        "nav": "N/A"
       },
       "pros": [
-        "Consistent revenue and profit growth",
-        "Healthy return ratios (RoNW)"
+        "Official RHP financial metrics synced",
+        "Check GMP trend before applying"
       ],
       "cons": [
-        "Working capital intensive operations"
+        "Grey market premium is indicative & volatile"
       ]
     }
   ]
