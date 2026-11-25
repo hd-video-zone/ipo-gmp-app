@@ -12,6 +12,8 @@
     .tab-OPEN { border-bottom: 3px solid #16a34a; color: #16a34a; font-weight: 700; }
     .tab-UPCOMING { border-bottom: 3px solid #f59e0b; color: #f59e0b; font-weight: 700; }
     .tab-CLOSED { border-bottom: 3px solid #ef4444; color: #ef4444; font-weight: 700; }
+    .detail-table th { background: #f3f4f6; color: #4b5563; font-weight: 700; padding: 8px 6px; font-size: 11px; text-align: left; }
+    .detail-table td { padding: 8px 6px; font-size: 11px; border-top: 1px solid #f1f5f9; }
   </style>
 </head>
 <body class="pb-24 text-gray-800 max-w-md mx-auto shadow-xl min-h-screen bg-[#f2f4f7]">
@@ -61,12 +63,12 @@
 
   <!-- Full Detail Screen Modal -->
   <div id="detailScreen" class="fixed inset-0 bg-[#f2f4f7] z-50 hidden flex-col max-w-md mx-auto overflow-y-auto">
-    <div class="bg-white sticky top-0 px-3.5 py-3 border-b flex items-center justify-between z-20 shadow-sm">
-      <div class="flex items-center gap-2.5 overflow-hidden">
-        <button onclick="closeDetail()" class="text-xl font-bold px-1">‹</button>
-        <h2 id="detailHeaderTitle" class="font-bold text-sm uppercase truncate">COMPANY DETAILS</h2>
-      </div>
-      <button id="detailShareBtn" class="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm shrink-0">↗</button>
+    <div class="bg-white sticky top-0 px-3 py-2.5 border-b flex items-center justify-between z-20 shadow-sm gap-2">
+      <button onclick="closeDetail()" class="flex items-center gap-1 bg-gray-100 active:bg-gray-200 px-3.5 py-2 rounded-xl font-bold text-sm text-gray-800 shrink-0">
+        <span class="text-lg leading-none">←</span><span>Back</span>
+      </button>
+      <h2 id="detailHeaderTitle" class="font-bold text-xs uppercase truncate flex-1 text-center">COMPANY DETAILS</h2>
+      <button id="detailShareBtn" class="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm shrink-0">↗</button>
     </div>
     <div id="detailContent" class="p-3 space-y-3 pb-24"></div>
     <div class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t p-3 z-30">
@@ -79,7 +81,7 @@
     <div class="bg-white w-full rounded-t-2xl p-4 space-y-3">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 id="applyTitle" class="font-bold text-sm">Apply IPO via Broker / UPI</h3>
-        <button onclick="closeApplyModal()" class="text-gray-500 font-bold text-lg">✕</button>
+        <button onclick="closeApplyModal()" class="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm">✕</button>
       </div>
       <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
         <a href="https://kite.zerodha.com/ipo" target="_blank" class="p-3 border rounded-xl text-center bg-orange-50 text-orange-700 border-orange-200">Zerodha Kite</a>
@@ -95,7 +97,7 @@
     <div class="bg-white w-full rounded-t-2xl p-4 space-y-3 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-sm">Check Live IPO Allotment Status</h3>
-        <button onclick="document.getElementById('allotmentModal').classList.add('hidden')" class="text-gray-500 font-bold text-lg">✕</button>
+        <button onclick="document.getElementById('allotmentModal').classList.add('hidden')" class="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm">✕</button>
       </div>
       <div class="space-y-2 text-xs font-bold">
         <a href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50">1. Link Intime (MUFG Intime) ↗</a>
@@ -124,8 +126,13 @@
       return m ? parseFloat(m[0]) : 0;
     }
 
+    function cleanDateOnly(str) {
+      // "25-NovGMP: 20" me se sirf "25-Nov" nikalna
+      const m = String(str || '').match(/(\d{1,2}[-\s][A-Za-z]{3}(?:[-\s]\d{2,4})?)/);
+      return m ? m[1].trim() : String(str || 'TBA').replace(/GMP.*/i, '').trim();
+    }
+
     function cleanNameAndBadge(raw) {
-      // Name ke end mein chipke status badges (IPOU, IPOC, IPOO, Allotted, Listed, SMEU, SMEO) saaf karna
       let badge = '';
       if (/allotted/i.test(raw)) badge = 'ALLOTTED';
       else if (/listed/i.test(raw)) badge = 'LISTED';
@@ -143,8 +150,21 @@
       return { cleaned, badge };
     }
 
+    function getLogoBadge(name, idx) {
+      const colors = [
+        'bg-blue-100 text-blue-700 border-blue-200',
+        'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'bg-amber-100 text-amber-700 border-amber-200',
+        'bg-purple-100 text-purple-700 border-purple-200',
+        'bg-rose-100 text-rose-700 border-rose-200',
+        'bg-cyan-100 text-cyan-700 border-cyan-200'
+      ];
+      const words = name.split(' ').filter(Boolean);
+      const initials = words.length >= 2 ? (words[0][0] + words[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+      return { initials, cls: colors[idx % colors.length] };
+    }
+
     function parseIndianDate(str) {
-      // "25-Nov" ya "2-Dec" ko current year ke Date object mein badalna
       const m = String(str || '').match(/(\d{1,2})[-\s]([A-Za-z]{3})/);
       if (!m) return null;
       const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
@@ -181,7 +201,6 @@
         const table = doc.querySelector('table');
         if (!table) return;
 
-        // Table headers se exact column index detect karna
         const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th')).map(th => th.innerText.trim().toLowerCase());
         const findCol = (keys, fallback) => {
           const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
@@ -191,7 +210,6 @@
         const idxName = findCol(['name'], 0);
         const idxGmp = findCol(['gmp'], 1);
         const idxPrice = findCol(['price'], 2);
-        const idxListing = findCol(['est', 'listing'], 3);
         const idxSize = findCol(['size'], 4);
         const idxLot = findCol(['lot'], 5);
         const idxOpen = findCol(['open'], 6);
@@ -211,10 +229,10 @@
           const priceRaw = cols[idxPrice] || '0';
           const issueSizeRaw = cols[idxSize] || 'TBA';
           const lotRaw = cols[idxLot] || '0';
-          const openDt = cols[idxOpen] || 'TBA';
-          const closeDt = cols[idxClose] || 'TBA';
-          const allotmentDt = (idxBoa !== -1 && cols[idxBoa]) ? cols[idxBoa] : 'TBA';
-          const listingDt = (idxListDt > idxClose && cols[idxListDt]) ? cols[idxListDt] : 'TBA';
+          const openDt = cleanDateOnly(cols[idxOpen] || 'TBA');
+          const closeDt = cleanDateOnly(cols[idxClose] || 'TBA');
+          const allotmentDt = (idxBoa !== -1 && cols[idxBoa]) ? cleanDateOnly(cols[idxBoa]) : 'TBA';
+          const listingDt = (idxListDt > idxClose && cols[idxListDt]) ? cleanDateOnly(cols[idxListDt]) : 'TBA';
 
           const upperPrice = cleanNum(priceRaw.split('-').pop());
           if (!name || upperPrice <= 0 || openDt === 'TBA' || openDt === '-') return;
@@ -232,7 +250,6 @@
           const status = determineStatus(badge, openDt, closeDt);
           const category = (cols[idxName] || '').toUpperCase().includes('SME') ? 'SME' : 'MAINBOARD';
 
-          // GMP value aur percentage extract
           const gmpVal = cleanNum(gmpRaw.split('(')[0]);
           const pctMatch = gmpRaw.match(/\(([-+]?\d*\.?\d+)%\)/);
           const gmpPct = pctMatch ? pctMatch[1] : (upperPrice > 0 ? ((gmpVal / upperPrice) * 100).toFixed(1) : '0.0');
@@ -240,8 +257,9 @@
           let lot = parseInt(cleanNum(lotRaw), 10);
           if (lot <= 0) lot = category === 'SME' ? 1000 : Math.max(1, Math.round(14500 / upperPrice));
 
-          const indShares = (category === 'SME' && (lot * upperPrice) < 200000) ? lot * 2 : lot;
-          const hniShares = category === 'SME' ? indShares + lot : lot * 14;
+          const retailerShares = (category === 'SME' && (lot * upperPrice) < 200000) ? lot * 2 : lot;
+          const shniShares = category === 'SME' ? retailerShares + lot : lot * Math.max(14, Math.ceil(205000 / (lot * upperPrice)));
+          const bhniShares = category === 'SME' ? lot * 8 : lot * Math.max(68, Math.ceil(1005000 / (lot * upperPrice)));
 
           parsed.push({
             id: idx + 1,
@@ -249,6 +267,7 @@
             ipoId,
             name,
             badge,
+            logo: getLogoBadge(name, idx),
             category,
             status,
             open_date: openDt,
@@ -264,10 +283,11 @@
             est_listing: (upperPrice + gmpVal).toFixed(0),
             allotment_date: allotmentDt,
             listing_date: listingDt,
-            gmp_ind: Math.round(gmpVal * indShares),
-            gmp_hni: Math.round(gmpVal * hniShares),
-            indShares,
-            hniShares
+            gmp_retailer: Math.round(gmpVal * retailerShares),
+            gmp_hni: Math.round(gmpVal * shniShares),
+            retailerShares,
+            shniShares,
+            bhniShares
           });
         });
 
@@ -319,8 +339,13 @@
 
         return `
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div class="flex justify-between items-start gap-2 mb-3">
-            <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${ipo.name}</h3>
+          <div class="flex items-center justify-between gap-2.5 mb-3">
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${ipo.logo.cls}">
+                ${ipo.logo.initials}
+              </div>
+              <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${ipo.name}</h3>
+            </div>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700 shrink-0">${ipo.category}</span>
           </div>
 
@@ -339,7 +364,7 @@
           <div class="space-y-1.5 text-xs py-3">
             <div class="flex justify-between"><span class="text-gray-500">Allotment Date:</span><span class="font-bold text-gray-900">${ipo.allotment_date}</span></div>
             <div class="flex justify-between"><span class="text-gray-500">Listing Date:</span><span class="font-bold text-gray-900">${ipo.listing_date}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (IND)*:</span><span class="font-bold text-green-700">₹${ipo.gmp_ind.toLocaleString('en-IN')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (Retailer)*:</span><span class="font-bold text-green-700">₹${ipo.gmp_retailer.toLocaleString('en-IN')}</span></div>
             <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (HNI)*:</span><span class="font-bold text-green-700">₹${ipo.gmp_hni.toLocaleString('en-IN')}</span></div>
           </div>
 
@@ -359,12 +384,28 @@
 
       document.getElementById('detailHeaderTitle').innerText = ipo.name;
       document.getElementById('detailApplyBtn').onclick = () => openApplyModal(ipo.name);
+      document.getElementById('detailShareBtn').onclick = () => shareText(ipo.name, ipo.gmp, ipo.gmp_percent);
       document.getElementById('detailScreen').classList.remove('hidden');
       document.getElementById('detailScreen').classList.add('flex');
 
-      const bhniShares = ipo.category === 'SME' ? ipo.lot_size * 8 : ipo.lot_size * 68;
+      const retLots = Math.round(ipo.retailerShares / ipo.lot_size);
+      const shniLots = Math.round(ipo.shniShares / ipo.lot_size);
+      const bhniLots = Math.round(ipo.bhniShares / ipo.lot_size);
 
       document.getElementById('detailContent').innerHTML = `
+        <!-- Company Header Card -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+          <div id="detailLogoBox" class="w-14 h-14 rounded-2xl border font-extrabold text-base flex items-center justify-center shrink-0 ${ipo.logo.cls}">
+            ${ipo.logo.initials}
+          </div>
+          <div class="flex-1">
+            <div class="font-bold text-sm text-gray-900">${ipo.name}</div>
+            <div class="text-xs text-gray-500 mt-0.5">${ipo.category} • Price: ${ipo.price}</div>
+            <div class="text-xs font-semibold text-blue-600 mt-0.5">Issue Size: ${ipo.issue_size} • Lot: ${ipo.lot_size} Shares</div>
+          </div>
+        </div>
+
+        <!-- Key Dates -->
         <div class="bg-white rounded-2xl p-4 shadow-sm">
           <div class="flex justify-between items-center mb-3">
             <span class="font-bold text-sm">📅 Key Dates</span>
@@ -378,43 +419,55 @@
           </div>
         </div>
 
+        <!-- GMP & Profit Summary -->
         <div class="bg-white rounded-2xl p-4 shadow-sm flex justify-between items-center">
           <div>
             <div class="text-xs text-gray-500">Live GMP Rumors</div>
             <div class="text-xl font-extrabold text-green-600">₹${ipo.gmp} (${ipo.gmp_percent}%)</div>
+            <div class="text-[11px] text-green-700 font-semibold mt-0.5">Retailer Profit: ₹${ipo.gmp_retailer.toLocaleString('en-IN')}</div>
           </div>
           <div class="text-right">
             <div class="text-xs text-gray-500">Est. Listing Price</div>
             <div class="text-lg font-bold">₹${ipo.est_listing}</div>
+            <div class="text-[11px] text-green-700 font-semibold mt-0.5">HNI Profit: ₹${ipo.gmp_hni.toLocaleString('en-IN')}</div>
           </div>
         </div>
 
-        <div id="liveSubBox" class="bg-white rounded-2xl p-4 shadow-sm">
-          <div class="font-bold text-sm mb-2">📊 Live Subscription, Reservation & Fundamentals</div>
-          <div class="text-xs text-gray-400">Loading live company tables...</div>
-        </div>
-
+        <!-- Lot(s) Distribution -->
         <div class="bg-white rounded-2xl p-4 shadow-sm">
           <div class="font-bold text-sm mb-3">💠 Lot(s) Distribution</div>
           <table class="w-full border border-gray-100 text-xs text-center">
             <thead class="bg-gray-100 text-[11px]">
-              <tr><th class="py-2 px-2 text-left">Category</th><th>Individual</th><th>sHNI</th><th>bHNI</th></tr>
+              <tr><th class="py-2 px-2 text-left">Category</th><th>Retailer</th><th>sHNI</th><th>bHNI</th></tr>
             </thead>
             <tbody>
               <tr class="border-t">
                 <td class="py-2 px-2 text-left font-semibold text-gray-500">Min. Shares</td>
-                <td class="font-bold">${ipo.indShares}</td>
-                <td class="font-bold">${ipo.hniShares}</td>
-                <td class="font-bold">${bhniShares}</td>
+                <td class="font-bold">${ipo.retailerShares.toLocaleString('en-IN')}</td>
+                <td class="font-bold">${ipo.shniShares.toLocaleString('en-IN')}</td>
+                <td class="font-bold">${ipo.bhniShares.toLocaleString('en-IN')}</td>
               </tr>
               <tr class="border-t">
                 <td class="py-2 px-2 text-left font-semibold text-gray-500">Min. Amount</td>
-                <td>₹${(ipo.indShares * ipo.upper_price).toLocaleString('en-IN')}</td>
-                <td>₹${(ipo.hniShares * ipo.upper_price).toLocaleString('en-IN')}</td>
-                <td>₹${(bhniShares * ipo.upper_price).toLocaleString('en-IN')}</td>
+                <td>₹${(ipo.retailerShares * ipo.upper_price).toLocaleString('en-IN')}</td>
+                <td>₹${(ipo.shniShares * ipo.upper_price).toLocaleString('en-IN')}</td>
+                <td>₹${(ipo.bhniShares * ipo.upper_price).toLocaleString('en-IN')}</td>
+              </tr>
+              <tr class="border-t">
+                <td class="py-2 px-2 text-left font-semibold text-gray-500">Total Lots</td>
+                <td class="text-blue-600 font-bold">${retLots} Lot</td>
+                <td class="text-blue-600 font-bold">${shniLots} Lots</td>
+                <td class="text-blue-600 font-bold">${bhniLots} Lots</td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Live Company Tables Container -->
+        <div id="liveSubBox" class="space-y-3">
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">
+            Fetching Live Subscription, Reservation, Financials & GMP History...
+          </div>
         </div>
 
         <button onclick="openAllotmentModal()" class="w-full py-3 rounded-xl bg-amber-500 text-white font-bold text-xs shadow">CHECK ALLOTMENT STATUS ↗</button>
@@ -425,18 +478,54 @@
           const res = await fetch(`${WORKER_URL}?mode=detail&id=${ipo.ipoId}&slug=${ipo.slug}`);
           const html = await res.text();
           const doc = new DOMParser().parseFromString(html, 'text/html');
-          const tables = doc.querySelectorAll('table');
-          let tablesHtml = '';
-          tables.forEach((t, i) => {
-            if (i < 6) {
-              t.className = 'w-full text-xs border border-gray-200 mb-3';
-              tablesHtml += `<div class="overflow-x-auto">${t.outerHTML}</div>`;
-            }
-          });
-          if (tablesHtml) {
-            document.getElementById('liveSubBox').innerHTML = `<div class="font-bold text-sm mb-2">📊 Live Subscription, Reservation & Financials</div>${tablesHtml}`;
+
+          // Real company logo agar page par available ho toh set karna
+          const imgEl = doc.querySelector('img[src*="logo"], .ipo-logo img, header img');
+          if (imgEl && imgEl.getAttribute('src') && !imgEl.getAttribute('src').includes('investorgain')) {
+            const src = imgEl.getAttribute('src').startsWith('http') ? imgEl.getAttribute('src') : 'https://www.investorgain.com' + imgEl.getAttribute('src');
+            document.getElementById('detailLogoBox').innerHTML = `<img src="${src}" class="w-full h-full object-contain rounded-xl">`;
           }
-        } catch (e) {}
+
+          // Saare important tables extract karna (Issue Details, Subscription, Reservation, Financials, GMP Trend)
+          const allTables = Array.from(doc.querySelectorAll('table'));
+          let sectionsHtml = '';
+
+          allTables.forEach((t, idx) => {
+            const txt = t.innerText.trim();
+            if (txt.length < 30 || idx > 8) return;
+
+            let title = '📋 IPO Details & Data';
+            const low = txt.toLowerCase();
+            if (low.includes('qib') || low.includes('subscription') || low.includes('nii')) title = '📈 Live Subscription Details';
+            else if (low.includes('gmp') || low.includes('kostak') || low.includes('sub2')) title = '📊 Day-by-Day GMP Trend';
+            else if (low.includes('revenue') || low.includes('profit') || low.includes('assets') || low.includes('net worth')) title = '🏢 Company Financials';
+            else if (low.includes('p/e') || low.includes('eps') || low.includes('ronw') || low.includes('roe')) title = '📌 KPI & Valuations';
+            else if (low.includes('face value') || low.includes('issue size') || low.includes('listing at')) title = '📑 IPO Issue Overview';
+            else if (low.includes('promoter')) title = '👥 Promoter Holding';
+
+            // "Individual" ya "Retail" ko clean "Retailer" dikhana
+            t.querySelectorAll('td, th').forEach(cell => {
+              if (/^retail(\s*investors?)?$/i.test(cell.innerText.trim())) {
+                cell.innerText = 'Retailer';
+              }
+            });
+
+            t.className = 'w-full detail-table border border-gray-100 rounded-xl overflow-hidden';
+            sectionsHtml += `
+              <div class="bg-white rounded-2xl p-4 shadow-sm">
+                <div class="font-bold text-sm mb-2.5 text-gray-900">${title}</div>
+                <div class="overflow-x-auto">${t.outerHTML}</div>
+              </div>`;
+          });
+
+          if (sectionsHtml) {
+            document.getElementById('liveSubBox').innerHTML = sectionsHtml;
+          } else {
+            document.getElementById('liveSubBox').innerHTML = `<div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">Subscription data updates once bidding starts on ${ipo.open_date}.</div>`;
+          }
+        } catch (e) {
+          document.getElementById('liveSubBox').innerHTML = `<div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-red-500">Could not load extra tables. Tap refresh to retry.</div>`;
+        }
       }
     }
 
