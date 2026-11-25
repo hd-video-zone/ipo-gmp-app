@@ -16,12 +16,11 @@
 </head>
 <body class="pb-24 text-gray-800 max-w-md mx-auto shadow-xl min-h-screen bg-[#f2f4f7]">
 
-  <!-- Top Header -->
   <header class="bg-white sticky top-0 z-30 shadow-sm">
     <div class="flex items-center justify-between px-3.5 py-2.5">
       <div class="flex items-center gap-2">
         <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-700">☰</div>
-        <button onclick="openLiveSubOverview()" class="flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800">
+        <button onclick="setStatus('OPEN')" class="flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800">
           <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> Live Subscription
         </button>
       </div>
@@ -52,12 +51,12 @@
           <span>SME</span>
         </label>
       </div>
-      <span id="lastUpdated" class="text-[10px] text-green-600 font-semibold">Fetching Live...</span>
+      <span id="lastUpdated" class="text-[10px] text-green-600 font-semibold">Syncing Live...</span>
     </div>
   </header>
 
   <main id="ipoList" class="p-3 space-y-3.5">
-    <div class="text-center py-12 text-gray-400 text-sm">Connecting to Live IPO Feed...</div>
+    <div class="text-center py-12 text-gray-400 text-sm">Loading Live IPO Data...</div>
   </main>
 
   <!-- Full Detail Screen Modal -->
@@ -111,11 +110,13 @@
   <!-- Bottom Nav -->
   <nav class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t border-gray-200 flex justify-around items-center py-2 text-[11px] font-semibold text-gray-500 z-30">
     <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-500"><span class="text-lg">🏠</span><span>IPO</span></button>
-    <button onclick="openLiveSubOverview()" class="flex flex-col items-center"><span class="text-lg">📊</span><span>Live Sub</span></button>
+    <button onclick="setStatus('OPEN')" class="flex flex-col items-center"><span class="text-lg">📊</span><span>Live Sub</span></button>
     <button onclick="openAllotmentModal()" class="flex flex-col items-center"><span class="text-lg">📢</span><span>Allotment</span></button>
   </nav>
 
   <script>
+    const WORKER_URL = "https://ipo-live-api.addag6761.workers.dev";
+
     let allIpos = [];
     let currentTab = 'OPEN';
 
@@ -152,33 +153,18 @@
 
     async function fetchLiveFromApi() {
       document.getElementById('lastUpdated').innerText = 'Syncing Live...';
-      const now = new Date();
-      const m = now.getMonth() + 1;
-      const y = now.getFullYear();
-      const fy = m >= 4 ? `${y}-${String(y + 1).slice(-2)}` : `${y - 1}-${String(y).slice(-2)}`;
-      const targetUrl = `https://webnodejs.investorgain.com/cloud/report/data-read/331/1/${m}/${y}/${fy}/0/all`;
-
-      const proxies = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
-      ];
-
-      for (const proxyUrl of proxies) {
-        try {
-          const res = await fetch(proxyUrl);
-          if (!res.ok) continue;
-          const json = await res.json();
-          const rows = json.reportTableData || [];
-          if (rows.length > 0) {
-            processRows(rows);
-            return;
-          }
-        } catch (e) {
-          console.log('Trying next mirror...');
+      try {
+        const res = await fetch(`${WORKER_URL}?mode=list&t=${Date.now()}`);
+        const json = await res.json();
+        const rows = json.reportTableData || [];
+        if (rows.length > 0) {
+          processRows(rows);
+          return;
         }
+      } catch (e) {
+        console.error(e);
       }
-      document.getElementById('lastUpdated').innerText = 'Offline Mode';
+      document.getElementById('lastUpdated').innerText = 'Retry Sync';
     }
 
     function processRows(rows) {
@@ -378,17 +364,15 @@
         <button onclick="openAllotmentModal()" class="w-full py-3 rounded-xl bg-amber-500 text-white font-bold text-xs shadow">CHECK ALLOTMENT STATUS ↗</button>
       `;
 
-      // Live detail page fetch (Subscription + Fundamentals)
       if (ipo.ipoId && ipo.slug) {
         try {
-          const dUrl = `https://www.investorgain.com/ipo/${ipo.slug}/${ipo.ipoId}/`;
-          const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(dUrl)}`);
+          const res = await fetch(`${WORKER_URL}?mode=detail&id=${ipo.ipoId}&slug=${ipo.slug}`);
           const html = await res.text();
           const doc = new DOMParser().parseFromString(html, 'text/html');
           const tables = doc.querySelectorAll('table');
           let tablesHtml = '';
           tables.forEach((t, i) => {
-            if (i < 4) {
+            if (i < 5) {
               t.className = 'w-full text-xs border border-gray-200 mb-3';
               tablesHtml += `<div class="overflow-x-auto">${t.outerHTML}</div>`;
             }
@@ -419,10 +403,6 @@
     function openAllotmentModal() {
       document.getElementById('allotmentModal').classList.remove('hidden');
       document.getElementById('allotmentModal').classList.add('flex');
-    }
-
-    function openLiveSubOverview() {
-      setStatus('OPEN');
     }
 
     function shareText(name, gmp, pct) {
