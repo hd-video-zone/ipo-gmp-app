@@ -1,0 +1,35 @@
+name: Auto Scrape IPO GMP
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Dar 1 kalake auto-run thase
+  workflow_dispatch: # Manual run button mate
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Libraries
+        run: pip install requests beautifulsoup4
+
+      - name: Run IPO Scraper
+        run: python scraper.py
+
+      - name: Save Updated JSON
+        run: |
+          git config --global user.name "IPO Auto Bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add ipo_data.json
+          git commit -m "Auto update live GMP data" || exit 0
+          git push
