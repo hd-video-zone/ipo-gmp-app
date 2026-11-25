@@ -124,28 +124,51 @@
       return m ? parseFloat(m[0]) : 0;
     }
 
-    function parseDateObj(str) {
-      const s = String(str || '').trim();
-      if (!s || s === '-' || s === 'TBA') return null;
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
+    function cleanNameAndBadge(raw) {
+      // Name ke end mein chipke status badges (IPOU, IPOC, IPOO, Allotted, Listed, SMEU, SMEO) saaf karna
+      let badge = '';
+      if (/allotted/i.test(raw)) badge = 'ALLOTTED';
+      else if (/listed/i.test(raw)) badge = 'LISTED';
+      else if (/(IPOO|SMEO)$/i.test(raw.trim())) badge = 'OPEN';
+      else if (/(IPOU|SMEU)$/i.test(raw.trim())) badge = 'UPCOMING';
+      else if (/(IPOC|SMEC)$/i.test(raw.trim())) badge = 'CLOSED';
+
+      let cleaned = raw
+        .replace(/(Allotted|Listed|Open|Close|Upcoming)$/gi, '')
+        .replace(/(IPOO|IPOU|IPOC|SMEO|SMEU|SMEC)$/gi, '')
+        .replace(/\bIPO\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return { cleaned, badge };
     }
 
-    function getStatus(openStr, closeStr, rowText) {
+    function parseIndianDate(str) {
+      // "25-Nov" ya "2-Dec" ko current year ke Date object mein badalna
+      const m = String(str || '').match(/(\d{1,2})[-\s]([A-Za-z]{3})/);
+      if (!m) return null;
+      const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+      const mon = months[m[2].toLowerCase()];
+      if (mon === undefined) return null;
+      const now = new Date();
+      return new Date(now.getFullYear(), mon, parseInt(m[1], 10));
+    }
+
+    function determineStatus(badge, openStr, closeStr) {
+      if (badge === 'OPEN') return 'OPEN';
+      if (badge === 'UPCOMING') return 'UPCOMING';
+      if (badge === 'CLOSED' || badge === 'ALLOTTED' || badge === 'LISTED') return 'CLOSED';
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const o = parseDateObj(openStr);
-      const c = parseDateObj(closeStr);
+      const o = parseIndianDate(openStr);
+      const c = parseIndianDate(closeStr);
       if (o && c) {
-        o.setHours(0, 0, 0, 0);
         c.setHours(23, 59, 59, 999);
         if (today >= o && today <= c) return 'OPEN';
         if (today < o) return 'UPCOMING';
         return 'CLOSED';
       }
-      const low = rowText.toLowerCase();
-      if (low.includes('open')) return 'OPEN';
-      if (low.includes('close') || low.includes('listed') || low.includes('allot')) return 'CLOSED';
       return 'UPCOMING';
     }
 
@@ -155,23 +178,45 @@
         const res = await fetch(`${WORKER_URL}?mode=list&t=${Date.now()}`);
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        const rows = doc.querySelectorAll('table tbody tr');
-        
+        const table = doc.querySelector('table');
+        if (!table) return;
+
+        // Table headers se exact column index detect karna
+        const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th')).map(th => th.innerText.trim().toLowerCase());
+        const findCol = (keys, fallback) => {
+          const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
+          return idx !== -1 ? idx : fallback;
+        };
+
+        const idxName = findCol(['name'], 0);
+        const idxGmp = findCol(['gmp'], 1);
+        const idxPrice = findCol(['price'], 2);
+        const idxListing = findCol(['est', 'listing'], 3);
+        const idxSize = findCol(['size'], 4);
+        const idxLot = findCol(['lot'], 5);
+        const idxOpen = findCol(['open'], 6);
+        const idxClose = findCol(['close'], 7);
+        const idxBoa = findCol(['boa', 'allot'], 8);
+        const idxListDt = headers.findLastIndex(h => h.includes('list'));
+
+        const rows = table.querySelectorAll('tbody tr');
         const parsed = [];
+
         rows.forEach((tr, idx) => {
           const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
           if (cols.length < 6) return;
 
-          const name = cols[0].replace(/\s+/g, ' ');
-          const priceStr = cols[1];
-          const gmpStr = cols[2];
-          const estStr = cols[3];
-          const issueSize = cols[4] || 'TBA';
-          const openDt = cols[5] || 'TBA';
-          const closeDt = cols[6] || 'TBA';
-          const listingDt = cols[7] || 'TBA';
+          const { cleaned: name, badge } = cleanNameAndBadge(cols[idxName] || '');
+          const gmpRaw = cols[idxGmp] || '0';
+          const priceRaw = cols[idxPrice] || '0';
+          const issueSizeRaw = cols[idxSize] || 'TBA';
+          const lotRaw = cols[idxLot] || '0';
+          const openDt = cols[idxOpen] || 'TBA';
+          const closeDt = cols[idxClose] || 'TBA';
+          const allotmentDt = (idxBoa !== -1 && cols[idxBoa]) ? cols[idxBoa] : 'TBA';
+          const listingDt = (idxListDt > idxClose && cols[idxListDt]) ? cols[idxListDt] : 'TBA';
 
-          const upperPrice = cleanNum(priceStr.split('-').pop());
+          const upperPrice = cleanNum(priceRaw.split('-').pop());
           if (!name || upperPrice <= 0 || openDt === 'TBA' || openDt === '-') return;
 
           const linkEl = tr.querySelector('a[href*="/ipo/"]');
@@ -184,11 +229,17 @@
             }
           }
 
-          const status = getStatus(openDt, closeDt, cols.join(' '));
-          const category = name.toUpperCase().includes('SME') ? 'SME' : 'MAINBOARD';
-          const gmp = cleanNum(gmpStr.split('(')[0]);
-          const lot = category === 'SME' ? 1000 : Math.max(1, Math.round(14500 / upperPrice));
-          const gmpPct = upperPrice > 0 ? ((gmp / upperPrice) * 100).toFixed(1) : 0;
+          const status = determineStatus(badge, openDt, closeDt);
+          const category = (cols[idxName] || '').toUpperCase().includes('SME') ? 'SME' : 'MAINBOARD';
+
+          // GMP value aur percentage extract
+          const gmpVal = cleanNum(gmpRaw.split('(')[0]);
+          const pctMatch = gmpRaw.match(/\(([-+]?\d*\.?\d+)%\)/);
+          const gmpPct = pctMatch ? pctMatch[1] : (upperPrice > 0 ? ((gmpVal / upperPrice) * 100).toFixed(1) : '0.0');
+
+          let lot = parseInt(cleanNum(lotRaw), 10);
+          if (lot <= 0) lot = category === 'SME' ? 1000 : Math.max(1, Math.round(14500 / upperPrice));
+
           const indShares = (category === 'SME' && (lot * upperPrice) < 200000) ? lot * 2 : lot;
           const hniShares = category === 'SME' ? indShares + lot : lot * 14;
 
@@ -197,23 +248,24 @@
             slug,
             ipoId,
             name,
+            badge,
             category,
             status,
             open_date: openDt,
             close_date: closeDt,
             date_range: `${openDt} - ${closeDt}`,
-            price: priceStr.includes('₹') ? priceStr : `₹${priceStr}`,
+            price: priceRaw.includes('₹') ? priceRaw : `₹${priceRaw}`,
             upper_price: upperPrice,
             lot_size: lot,
-            issue_size: issueSize.includes('₹') ? issueSize : `₹${issueSize}`,
-            gmp,
+            issue_size: issueSizeRaw.includes('₹') ? issueSizeRaw : `₹${issueSizeRaw}`,
+            gmp: gmpVal,
             gmp_percent: gmpPct,
             last_heard: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            est_listing: cleanNum(estStr) || (upperPrice + gmp).toFixed(0),
-            allotment_date: 'TBA',
+            est_listing: (upperPrice + gmpVal).toFixed(0),
+            allotment_date: allotmentDt,
             listing_date: listingDt,
-            gmp_ind: Math.round(gmp * indShares),
-            gmp_hni: Math.round(gmp * hniShares),
+            gmp_ind: Math.round(gmpVal * indShares),
+            gmp_hni: Math.round(gmpVal * hniShares),
             indShares,
             hniShares
           });
@@ -258,6 +310,7 @@
       }
 
       box.innerHTML = list.map(ipo => {
+        const gmpColor = ipo.gmp > 0 ? 'text-green-600' : 'text-gray-600';
         const actionBtn = ipo.status === 'OPEN'
           ? `<button onclick="openApplyModal('${ipo.name}')" class="flex-1 py-2.5 rounded-full bg-[#4a4a4a] text-white font-bold text-xs">APPLY</button>`
           : ipo.status === 'CLOSED'
@@ -272,21 +325,22 @@
           </div>
 
           <div class="space-y-1.5 text-xs border-b border-gray-100 pb-3">
-            <div class="flex justify-between"><span class="text-gray-500">Date:</span><span class="font-bold">${ipo.date_range}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Price:</span><span class="font-bold">${ipo.price}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Lot Size:</span><span class="font-bold">${ipo.lot_size}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Issue Size:</span><span class="font-bold">${ipo.issue_size}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Offer Date:</span><span class="font-bold text-gray-900">${ipo.date_range}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Price Band:</span><span class="font-bold text-gray-900">${ipo.price}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Lot Size:</span><span class="font-bold text-gray-900">${ipo.lot_size} Shares</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Issue Size:</span><span class="font-bold text-gray-900">${ipo.issue_size}</span></div>
           </div>
 
           <div class="space-y-1.5 text-xs border-b border-gray-100 py-3">
-            <div class="flex justify-between"><span class="text-gray-500">GMP Rumors*:</span><span class="font-bold text-green-600">₹${ipo.gmp} (${ipo.gmp_percent}%)</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Last Heard:</span><span class="font-semibold">${ipo.last_heard}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP Rumors*:</span><span class="font-bold ${gmpColor}">₹${ipo.gmp} (${ipo.gmp_percent}%)</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Last Heard:</span><span class="font-semibold text-gray-800">${ipo.last_heard}</span></div>
           </div>
 
           <div class="space-y-1.5 text-xs py-3">
-            <div class="flex justify-between"><span class="text-gray-500">Listing Date:</span><span class="font-bold">${ipo.listing_date}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (IND)*:</span><span class="font-bold">₹${ipo.gmp_ind.toLocaleString('en-IN')}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (HNI)*:</span><span class="font-bold">₹${ipo.gmp_hni.toLocaleString('en-IN')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Allotment Date:</span><span class="font-bold text-gray-900">${ipo.allotment_date}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Listing Date:</span><span class="font-bold text-gray-900">${ipo.listing_date}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (IND)*:</span><span class="font-bold text-green-700">₹${ipo.gmp_ind.toLocaleString('en-IN')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">GMP x Lots (HNI)*:</span><span class="font-bold text-green-700">₹${ipo.gmp_hni.toLocaleString('en-IN')}</span></div>
           </div>
 
           <div class="flex items-center gap-2.5 pt-1">
@@ -316,9 +370,10 @@
             <span class="font-bold text-sm">📅 Key Dates</span>
             <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600">${ipo.status}</span>
           </div>
-          <div class="grid grid-cols-3 text-center text-[11px]">
+          <div class="grid grid-cols-4 text-center text-[11px]">
             <div><div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1"></div><div class="font-bold">Open</div><div class="text-gray-500">${ipo.open_date}</div></div>
             <div><div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1"></div><div class="font-bold">Close</div><div class="text-gray-500">${ipo.close_date}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-gray-300 mx-auto mb-1"></div><div class="font-bold">Allotment</div><div class="text-gray-500">${ipo.allotment_date}</div></div>
             <div><div class="w-3 h-3 rounded-full bg-gray-300 mx-auto mb-1"></div><div class="font-bold">Listing</div><div class="text-gray-500">${ipo.listing_date}</div></div>
           </div>
         </div>
@@ -329,13 +384,13 @@
             <div class="text-xl font-extrabold text-green-600">₹${ipo.gmp} (${ipo.gmp_percent}%)</div>
           </div>
           <div class="text-right">
-            <div class="text-xs text-gray-500">Est. Listing</div>
+            <div class="text-xs text-gray-500">Est. Listing Price</div>
             <div class="text-lg font-bold">₹${ipo.est_listing}</div>
           </div>
         </div>
 
         <div id="liveSubBox" class="bg-white rounded-2xl p-4 shadow-sm">
-          <div class="font-bold text-sm mb-2">📊 Live Subscription, Lot Size & Fundamentals</div>
+          <div class="font-bold text-sm mb-2">📊 Live Subscription, Reservation & Fundamentals</div>
           <div class="text-xs text-gray-400">Loading live company tables...</div>
         </div>
 
