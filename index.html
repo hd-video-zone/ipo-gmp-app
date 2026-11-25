@@ -8,13 +8,21 @@
   <meta name="theme-color" content="#ffffff" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; -webkit-tap-highlight-color: transparent; }
-    .tab-OPEN { border-bottom: 3px solid #16a34a; color: #16a34a; font-weight: 700; }
-    .tab-UPCOMING { border-bottom: 3px solid #f59e0b; color: #f59e0b; font-weight: 700; }
-    .tab-CLOSED { border-bottom: 3px solid #ef4444; color: #ef4444; font-weight: 700; }
-    .tab-SAVED { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; -webkit-tap-highlight-color: transparent; transition: background 0.2s, color 0.2s; }
+    body.dark { background: #0f172a; color: #f1f5f9; }
+    body.dark .bg-white { background-color: #1e293b !important; color: #f1f5f9 !important; }
+    body.dark .bg-gray-50, body.dark .bg-gray-100 { background-color: #334155 !important; color: #e2e8f0 !important; }
+    body.dark .border-gray-100, body.dark .border-gray-200, body.dark .border-b, body.dark .border-t { border-color: #334155 !important; }
+    body.dark .text-gray-900, body.dark .text-gray-800 { color: #f8fafc !important; }
+    body.dark .text-gray-500, body.dark .text-gray-600 { color: #94a3b8 !important; }
+    .tab-OPEN { border-bottom: 3px solid #16a34a; color: #16a34a !important; font-weight: 700; }
+    .tab-UPCOMING { border-bottom: 3px solid #f59e0b; color: #f59e0b !important; font-weight: 700; }
+    .tab-CLOSED { border-bottom: 3px solid #ef4444; color: #ef4444 !important; font-weight: 700; }
+    .tab-TOOLS { border-bottom: 3px solid #2563eb; color: #2563eb !important; font-weight: 700; }
     .detail-table th { background: #f3f4f6; color: #4b5563; font-weight: 700; padding: 8px 6px; font-size: 11px; text-align: left; }
+    body.dark .detail-table th { background: #334155; color: #cbd5e1; }
     .detail-table td { padding: 8px 6px; font-size: 11px; border-top: 1px solid #f1f5f9; }
+    body.dark .detail-table td { border-color: #334155; }
   </style>
 </head>
 <body class="pb-24 text-gray-800 max-w-md mx-auto shadow-xl min-h-screen bg-[#f2f4f7]">
@@ -23,28 +31,29 @@
     <div class="flex items-center justify-between px-3.5 py-2.5">
       <div class="flex items-center gap-2">
         <button onclick="setStatus('OPEN')" class="flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800">
-          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> Live IPO Tracker
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> IPO Premium Pro
         </button>
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="toggleSearch()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm">🔍</button>
-        <button onclick="fetchLiveFromWorker()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm">🔄</button>
+      <div class="flex items-center gap-1.5">
+        <button onclick="toggleDarkMode()" id="darkBtn" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs">🌙</button>
+        <button onclick="toggleSearch()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs">🔍</button>
+        <button onclick="fetchLiveFromWorker()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs">🔄</button>
       </div>
     </div>
 
     <div id="searchBox" class="hidden px-3.5 pb-2">
-      <input type="text" id="searchInput" oninput="renderList()" placeholder="Search Mainboard or SME IPO..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+      <input type="text" id="searchInput" oninput="renderList()" placeholder="Search Mainboard or SME IPO..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500">
     </div>
 
     <div class="grid grid-cols-4 text-center border-t border-b border-gray-200 text-xs font-bold text-gray-500 bg-white">
       <button onclick="setStatus('OPEN')" id="btn-OPEN" class="py-3 tab-OPEN">OPEN</button>
       <button onclick="setStatus('UPCOMING')" id="btn-UPCOMING" class="py-3">UPCOMING</button>
       <button onclick="setStatus('CLOSED')" id="btn-CLOSED" class="py-3">CLOSED</button>
-      <button onclick="setStatus('SAVED')" id="btn-SAVED" class="py-3">SAVED ★</button>
+      <button onclick="setStatus('TOOLS')" id="btn-TOOLS" class="py-3">MY VAULT</button>
     </div>
 
-    <div class="flex items-center justify-between px-3.5 py-2 bg-white border-b border-gray-200 text-xs font-bold">
-      <div class="flex items-center gap-3.5">
+    <div id="filterBar" class="flex items-center justify-between px-3.5 py-2 bg-white border-b border-gray-200 text-xs font-bold">
+      <div class="flex items-center gap-3">
         <label class="flex items-center gap-1.5 cursor-pointer">
           <input type="checkbox" id="chkMainboard" checked onchange="renderList()" class="w-4 h-4 accent-gray-700 rounded">
           <span>MAINBOARD</span>
@@ -53,17 +62,20 @@
           <input type="checkbox" id="chkSme" checked onchange="renderList()" class="w-4 h-4 accent-gray-700 rounded">
           <span>SME</span>
         </label>
+        <label class="flex items-center gap-1 cursor-pointer text-amber-500">
+          <input type="checkbox" id="chkSavedOnly" onchange="renderList()" class="w-3.5 h-3.5 accent-amber-500 rounded">
+          <span>★</span>
+        </label>
       </div>
-      <div class="flex items-center gap-2">
-        <select id="sortSelect" onchange="renderList()" class="bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-bold text-gray-700 focus:outline-none">
-          <option value="default">Sort: Latest</option>
-          <option value="gmp_pct">Sort: Highest GMP %</option>
-          <option value="profit">Sort: Highest Profit</option>
-        </select>
-      </div>
+      <select id="sortSelect" onchange="renderList()" class="bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-bold text-gray-700 focus:outline-none">
+        <option value="default">Sort: Latest</option>
+        <option value="gmp_pct">Highest GMP %</option>
+        <option value="profit">Highest Profit</option>
+      </select>
     </div>
+
     <div class="px-4 py-1 bg-gray-50 border-b border-gray-200 flex justify-between text-[10px] text-gray-500">
-      <span>100% Ad-Free Personal Edition</span>
+      <span>Smart Dual-GMP & Live Sub Engine</span>
       <span id="lastUpdated" class="text-green-600 font-semibold">Syncing Live...</span>
     </div>
   </header>
@@ -110,7 +122,8 @@
         <h3 class="font-bold text-sm">Check Live IPO Allotment Status</h3>
         <button onclick="document.getElementById('allotmentModal').classList.add('hidden')" class="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm">✕</button>
       </div>
-      <div class="space-y-2 text-xs font-bold">
+      <div id="modalPanQuickList" class="space-y-1.5"></div>
+      <div class="space-y-2 text-xs font-bold pt-1">
         <a href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50">1. Link Intime (MUFG Intime) ↗</a>
         <a href="https://kosmic.kfintech.com/ipostatus/" target="_blank" class="block p-3 border rounded-xl bg-gray-50">2. KFin Technologies (KFinTech) ↗</a>
         <a href="https://ipo.bigshareonline.com/ipo_status.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50">3. Bigshare Services Pvt Ltd ↗</a>
@@ -122,8 +135,8 @@
 
   <!-- Bottom Nav -->
   <nav class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t border-gray-200 flex justify-around items-center py-2 text-[11px] font-semibold text-gray-500 z-30">
-    <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-500"><span class="text-lg">🏠</span><span>IPO</span></button>
-    <button onclick="setStatus('SAVED')" class="flex flex-col items-center"><span class="text-lg">★</span><span>Saved</span></button>
+    <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-500"><span class="text-lg">🏠</span><span>Live IPOs</span></button>
+    <button onclick="setStatus('TOOLS')" class="flex flex-col items-center"><span class="text-lg">🧰</span><span>PAN & Tools</span></button>
     <button onclick="openAllotmentModal()" class="flex flex-col items-center"><span class="text-lg">📢</span><span>Allotment</span></button>
   </nav>
 
@@ -132,15 +145,28 @@
     let allIpos = [];
     let currentTab = 'OPEN';
     let savedNames = JSON.parse(localStorage.getItem('savedIpos') || '[]');
+    let panVault = JSON.parse(localStorage.getItem('panVault') || '[]');
+    let myAllotted = JSON.parse(localStorage.getItem('myAllotted') || '[]');
+    let userBudget = parseFloat(localStorage.getItem('userBudget') || '150000');
+    let logoCache = JSON.parse(localStorage.getItem('logoCache') || '{}');
     let activeCalcIpo = null;
     let calcLots = 1;
 
+    if (localStorage.getItem('darkMode') === '1') {
+      document.body.classList.add('dark');
+      document.getElementById('darkBtn').innerText = '☀️';
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem('darkMode', isDark ? '1' : '0');
+      document.getElementById('darkBtn').innerText = isDark ? '☀️' : '🌙';
+    }
+
     function toggleSave(name) {
-      if (savedNames.includes(name)) {
-        savedNames = savedNames.filter(n => n !== name);
-      } else {
-        savedNames.push(name);
-      }
+      if (savedNames.includes(name)) savedNames = savedNames.filter(n => n !== name);
+      else savedNames.push(name);
       localStorage.setItem('savedIpos', JSON.stringify(savedNames));
       renderList();
     }
@@ -185,6 +211,29 @@
       const words = name.split(' ').filter(Boolean);
       const initials = words.length >= 2 ? (words[0][0] + words[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
       return { initials, cls: colors[idx % colors.length] };
+    }
+
+    // Smart Subscription-based Indicative GMP Estimator (Agar market GMP 0 ho toh bhi est. listing gain batayega)
+    function estimateFromSubscription(upperPrice, subTimes, category) {
+      if (subTimes <= 0) return { estGmp: 0, estPct: 0, label: 'Awaiting Subscription' };
+      let pct = 0;
+      if (subTimes >= 100) pct = category === 'SME' ? 55 : 42;
+      else if (subTimes >= 50) pct = category === 'SME' ? 38 : 28;
+      else if (subTimes >= 20) pct = 20;
+      else if (subTimes >= 8) pct = 12;
+      else if (subTimes >= 3) pct = 6;
+      else if (subTimes >= 1) pct = 2;
+      else pct = 0;
+
+      const estGmp = Math.round((upperPrice * pct) / 100);
+      return { estGmp, estPct: pct, label: `Sub-Based Est. (${subTimes}x)` };
+    }
+
+    function getVerdictBadge(gmpPct, subTimes) {
+      if (gmpPct >= 25 || subTimes >= 30) return { text: '🔥 Strong Listing Buzz', cls: 'bg-green-100 text-green-800' };
+      if (gmpPct >= 10 || subTimes >= 8) return { text: '✅ Moderate Demand', cls: 'bg-blue-100 text-blue-800' };
+      if (gmpPct > 0 || subTimes >= 1) return { text: '⚖️ Neutral / Watch', cls: 'bg-amber-100 text-amber-800' };
+      return { text: '⚠️ Low Buzz / Risky', cls: 'bg-gray-100 text-gray-600' };
     }
 
     function parseIndianDate(str) {
@@ -233,6 +282,7 @@
         const idxName = findCol(['name'], 0);
         const idxGmp = findCol(['gmp'], 1);
         const idxPrice = findCol(['price'], 2);
+        const idxSub = findCol(['sub'], -1);
         const idxSize = findCol(['size'], 4);
         const idxLot = findCol(['lot'], 5);
         const idxOpen = findCol(['open'], 6);
@@ -256,6 +306,7 @@
           const closeDt = cleanDateOnly(cols[idxClose] || 'TBA');
           const allotmentDt = (idxBoa !== -1 && cols[idxBoa]) ? cleanDateOnly(cols[idxBoa]) : 'TBA';
           const listingDt = (idxListDt > idxClose && cols[idxListDt]) ? cleanDateOnly(cols[idxListDt]) : 'TBA';
+          const subTimes = idxSub !== -1 ? cleanNum(cols[idxSub]) : 0;
 
           const upperPrice = cleanNum(priceRaw.split('-').pop());
           if (!name || upperPrice <= 0 || openDt === 'TBA' || openDt === '-') return;
@@ -274,9 +325,18 @@
           const status = determineStatus(badge, openDt, closeDt);
           const category = (cols[idxName] || '').toUpperCase().includes('SME') ? 'SME' : 'MAINBOARD';
 
-          const gmpVal = cleanNum(gmpRaw.split('(')[0]);
+          let gmpVal = cleanNum(gmpRaw.split('(')[0]);
           const pctMatch = gmpRaw.match(/\(([-+]?\d*\.?\d+)%\)/);
-          const gmpPct = pctMatch ? parseFloat(pctMatch[1]) : (upperPrice > 0 ? parseFloat(((gmpVal / upperPrice) * 100).toFixed(1)) : 0);
+          let gmpPct = pctMatch ? parseFloat(pctMatch[1]) : (upperPrice > 0 ? parseFloat(((gmpVal / upperPrice) * 100).toFixed(1)) : 0);
+          let isSubEstimated = false;
+
+          // Agar GMP 0 hai lekin live subscription available hai toh smart model se est. GMP calculate karna
+          if (gmpVal === 0 && subTimes > 0) {
+            const est = estimateFromSubscription(upperPrice, subTimes, category);
+            gmpVal = est.estGmp;
+            gmpPct = est.estPct;
+            isSubEstimated = true;
+          }
 
           let lot = parseInt(cleanNum(lotRaw), 10);
           if (lot <= 0) lot = category === 'SME' ? 1000 : Math.max(1, Math.round(14500 / upperPrice));
@@ -303,6 +363,9 @@
             issue_size: issueSizeRaw.includes('₹') ? issueSizeRaw : `₹${issueSizeRaw}`,
             gmp: gmpVal,
             gmp_percent: gmpPct,
+            isSubEstimated,
+            subTimes,
+            verdict: getVerdictBadge(gmpPct, subTimes),
             last_heard: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             est_listing: (upperPrice + gmpVal).toFixed(0),
             allotment_date: allotmentDt,
@@ -326,9 +389,10 @@
 
     function setStatus(st) {
       currentTab = st;
-      ['OPEN', 'UPCOMING', 'CLOSED', 'SAVED'].forEach(t => {
+      ['OPEN', 'UPCOMING', 'CLOSED', 'TOOLS'].forEach(t => {
         document.getElementById('btn-' + t).className = 'py-3 ' + (t === st ? 'tab-' + t : '');
       });
+      document.getElementById('filterBar').style.display = st === 'TOOLS' ? 'none' : 'flex';
       renderList();
     }
 
@@ -336,16 +400,157 @@
       document.getElementById('searchBox').classList.toggle('hidden');
     }
 
+    function addCalendarReminder(name, closeDt) {
+      const title = encodeURIComponent(`Apply IPO: ${name} (Last Day ${closeDt})`);
+      const details = encodeURIComponent(`Check Live Subscription & Apply before 3:00 PM via UPI.`);
+      window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}`, '_blank');
+    }
+
+    function renderToolsVault() {
+      const openIpos = allIpos.filter(i => i.status === 'OPEN');
+      let remaining = userBudget;
+      const affordable = [];
+      openIpos.forEach(i => {
+        const req = i.retailerShares * i.upper_price;
+        if (req <= remaining) {
+          affordable.push({ name: i.name, req, profit: i.gmp_retailer });
+          remaining -= req;
+        }
+      });
+
+      const panHtml = panVault.length
+        ? panVault.map((p, idx) => `
+          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs">
+            <div><div class="font-bold">${p.label}</div><div class="text-gray-500 font-mono">${p.pan}</div></div>
+            <div class="flex gap-1.5">
+              <button onclick="navigator.clipboard.writeText('${p.pan}'); alert('Copied: ${p.pan}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold">Copy</button>
+              <button onclick="removePan(${idx})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold">✕</button>
+            </div>
+          </div>`).join('')
+        : `<div class="text-xs text-gray-400">No PAN saved yet. Add family PANs below for 1-tap allotment check.</div>`;
+
+      const allottedHtml = myAllotted.length
+        ? myAllotted.map((a, idx) => `
+          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs">
+            <div><div class="font-bold">${a.name}</div><div class="text-green-600 font-bold">Profit/Loss: ₹${Number(a.pnl).toLocaleString('en-IN')}</div></div>
+            <button onclick="removeAllotted(${idx})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold">✕</button>
+          </div>`).join('')
+        : `<div class="text-xs text-gray-400">Track your allotted IPO listing gains here.</div>`;
+
+      const totalPnl = myAllotted.reduce((sum, x) => sum + Number(x.pnl || 0), 0);
+
+      document.getElementById('ipoList').innerHTML = `
+        <!-- Family PAN Vault -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-sm">🪪 Family PAN Allotment Vault</span>
+            <span class="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-bold">Offline Safe</span>
+          </div>
+          <div class="space-y-2">${panHtml}</div>
+          <div class="flex gap-2 pt-1">
+            <input type="text" id="panNameInput" placeholder="Name (e.g. Self)" class="w-1/3 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
+            <input type="text" id="panNumInput" placeholder="ABCDE1234F" maxlength="10" class="w-1/2 border rounded-xl px-2.5 py-2 text-xs uppercase text-gray-900">
+            <button onclick="addPan()" class="flex-1 bg-gray-800 text-white rounded-xl font-bold text-xs">Add</button>
+          </div>
+        </div>
+
+        <!-- Budget & Capital Planner -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="font-bold text-sm">💰 IPO Capital & Budget Planner</div>
+          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-xs">
+            <span class="font-semibold">Available Funds (₹):</span>
+            <input type="number" value="${userBudget}" onchange="updateBudget(this.value)" class="w-28 border rounded-lg px-2 py-1 text-right font-bold text-gray-900">
+          </div>
+          <div class="text-xs text-gray-600">
+            With <b>₹${userBudget.toLocaleString('en-IN')}</b>, you can apply in <b>${affordable.length} OPEN IPO(s)</b> simultaneously:
+          </div>
+          <div class="space-y-1.5">
+            ${affordable.map(a => `<div class="flex justify-between text-xs bg-green-50/70 p-2 rounded-lg"><span class="font-bold">${a.name}</span><span>₹${a.req.toLocaleString('en-IN')} (Est. +₹${a.profit.toLocaleString('en-IN')})</span></div>`).join('') || '<div class="text-xs text-gray-400">No OPEN IPO fits in this budget right now.</div>'}
+          </div>
+        </div>
+
+        <!-- Allotted Portfolio Tracker -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-sm">📈 My Allotted IPO Profit Book</span>
+            <span class="text-xs font-extrabold ${totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}">Total: ₹${totalPnl.toLocaleString('en-IN')}</span>
+          </div>
+          <div class="space-y-2">${allottedHtml}</div>
+          <div class="flex gap-2 pt-1">
+            <input type="text" id="allotNameInput" placeholder="IPO Name" class="w-1/2 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
+            <input type="number" id="allotPnlInput" placeholder="Gain/Loss ₹" class="w-1/3 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
+            <button onclick="addAllotted()" class="flex-1 bg-green-600 text-white rounded-xl font-bold text-xs">Save</button>
+          </div>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
+          <div><div class="font-bold text-sm">💾 Backup Personal Data</div><div class="text-[11px] text-gray-500">Export PANs, Saved & Profit Book</div></div>
+          <button onclick="exportBackup()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">Export JSON</button>
+        </div>
+      `;
+    }
+
+    function addPan() {
+      const label = document.getElementById('panNameInput').value.trim() || 'Member';
+      const pan = document.getElementById('panNumInput').value.trim().toUpperCase();
+      if (pan.length !== 10) return alert('Enter valid 10-character PAN');
+      panVault.push({ label, pan });
+      localStorage.setItem('panVault', JSON.stringify(panVault));
+      renderToolsVault();
+    }
+
+    function removePan(idx) {
+      panVault.splice(idx, 1);
+      localStorage.setItem('panVault', JSON.stringify(panVault));
+      renderToolsVault();
+    }
+
+    function updateBudget(val) {
+      userBudget = parseFloat(val) || 0;
+      localStorage.setItem('userBudget', String(userBudget));
+      renderToolsVault();
+    }
+
+    function addAllotted() {
+      const name = document.getElementById('allotNameInput').value.trim();
+      const pnl = parseFloat(document.getElementById('allotPnlInput').value) || 0;
+      if (!name) return;
+      myAllotted.push({ name, pnl });
+      localStorage.setItem('myAllotted', JSON.stringify(myAllotted));
+      renderToolsVault();
+    }
+
+    function removeAllotted(idx) {
+      myAllotted.splice(idx, 1);
+      localStorage.setItem('myAllotted', JSON.stringify(myAllotted));
+      renderToolsVault();
+    }
+
+    function exportBackup() {
+      const data = JSON.stringify({ savedNames, panVault, myAllotted, userBudget }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ipo-premium-backup.json';
+      a.click();
+    }
+
     function renderList() {
+      if (currentTab === 'TOOLS') return renderToolsVault();
+
       const mainOk = document.getElementById('chkMainboard').checked;
       const smeOk = document.getElementById('chkSme').checked;
+      const savedOnly = document.getElementById('chkSavedOnly').checked;
       const q = document.getElementById('searchInput').value.toLowerCase();
       const sortBy = document.getElementById('sortSelect').value;
 
       let list = allIpos.filter(i => {
-        const tabMatch = currentTab === 'SAVED' ? savedNames.includes(i.name) : i.status === currentTab;
+        const tabMatch = i.status === currentTab;
         const catMatch = (i.category === 'MAINBOARD' && mainOk) || (i.category === 'SME' && smeOk);
-        return tabMatch && catMatch && i.name.toLowerCase().includes(q);
+        const saveMatch = !savedOnly || savedNames.includes(i.name);
+        return tabMatch && catMatch && saveMatch && i.name.toLowerCase().includes(q);
       });
 
       if (sortBy === 'gmp_pct') list = [...list].sort((a, b) => b.gmp_percent - a.gmp_percent);
@@ -359,7 +564,14 @@
 
       box.innerHTML = list.map(ipo => {
         const isSaved = savedNames.includes(ipo.name);
+        const cachedLogo = logoCache[ipo.name];
+        const logoHtml = cachedLogo
+          ? `<img src="${cachedLogo}" class="w-11 h-11 rounded-xl object-contain bg-white border p-1 shrink-0">`
+          : `<div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${ipo.logo.cls}">${ipo.logo.initials}</div>`;
+
         const gmpColor = ipo.gmp > 0 ? 'text-green-600' : 'text-gray-600';
+        const gmpLabel = ipo.isSubEstimated ? 'Sub-Based Est. GMP*:' : 'GMP Rumors*:';
+
         const actionBtn = ipo.status === 'OPEN'
           ? `<button onclick="openApplyModal('${ipo.name}')" class="flex-1 py-2.5 rounded-full bg-[#4a4a4a] text-white font-bold text-xs">APPLY</button>`
           : ipo.status === 'CLOSED'
@@ -368,16 +580,20 @@
 
         return `
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
             <div class="flex items-center gap-2.5 overflow-hidden">
-              <div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${ipo.logo.cls}">
-                ${ipo.logo.initials}
+              ${logoHtml}
+              <div>
+                <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${ipo.name}</h3>
+                <span class="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${ipo.verdict.cls}">${ipo.verdict.text}</span>
               </div>
-              <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${ipo.name}</h3>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
+            <div class="flex flex-col items-end gap-1 shrink-0">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-700">${ipo.category}</span>
-              <button onclick="toggleSave('${ipo.name.replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-sm ${isSaved ? 'text-amber-500' : 'text-gray-400'}">★</button>
+              <div class="flex items-center gap-1">
+                <button onclick="addCalendarReminder('${ipo.name.replace(/'/g, "\\'")}', '${ipo.close_date}')" class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-xs">📅</button>
+                <button onclick="toggleSave('${ipo.name.replace(/'/g, "\\'")}')" class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-sm ${isSaved ? 'text-amber-500' : 'text-gray-400'}">★</button>
+              </div>
             </div>
           </div>
 
@@ -389,7 +605,7 @@
           </div>
 
           <div class="space-y-1.5 text-xs border-b border-gray-100 py-3">
-            <div class="flex justify-between"><span class="text-gray-500">GMP Rumors*:</span><span class="font-bold ${gmpColor}">₹${ipo.gmp} (${ipo.gmp_percent}%)</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">${gmpLabel}</span><span class="font-bold ${gmpColor}">₹${ipo.gmp} (${ipo.gmp_percent}%)</span></div>
             <div class="flex justify-between"><span class="text-gray-500">Last Heard:</span><span class="font-semibold text-gray-800">${ipo.last_heard}</span></div>
           </div>
 
@@ -419,7 +635,7 @@
       const profit = Math.round(shares * activeCalcIpo.gmp);
 
       document.getElementById('calcLotDisplay').innerText = `${calcLots} Lot${calcLots > 1 ? 's' : ''}`;
-      document.getElementById('calcShares').innerText = `${shares.toLocaleString('en-IN')} Shares`;
+      document.getElementById('calcShares').innerText = `${shares.toLocaleString('en-IN')}`;
       document.getElementById('calcBlocked').innerText = `₹${blocked.toLocaleString('en-IN')}`;
       document.getElementById('calcProfit').innerText = `₹${profit.toLocaleString('en-IN')}`;
     }
@@ -433,6 +649,16 @@
         const pct = (100 / subTimes).toFixed(1);
         const oneIn = Math.round(subTimes);
         out.innerHTML = `<span class="text-blue-600 font-extrabold">${pct}% Chance</span> (1 out of every ${oneIn} applicants gets 1 lot)`;
+      }
+
+      // Agar market GMP 0 hai toh live subscription input ke base par smart est. GMP bhi update karna
+      if (activeCalcIpo && activeCalcIpo.gmp === 0 && subTimes > 0) {
+        const est = estimateFromSubscription(activeCalcIpo.upper_price, subTimes, activeCalcIpo.category);
+        const box = document.getElementById('subGmpFallbackBox');
+        if (box) {
+          box.innerHTML = `💡 <b>Smart Subscription-Based Est. GMP:</b> ₹${est.estGmp} (${est.estPct}%) • Est. Listing: ₹${activeCalcIpo.upper_price + est.estGmp}`;
+          box.classList.remove('hidden');
+        }
       }
     }
 
@@ -452,11 +678,16 @@
       document.getElementById('detailScreen').classList.remove('hidden');
       document.getElementById('detailScreen').classList.add('flex');
 
+      const cachedLogo = logoCache[ipo.name];
+      const initLogoHtml = cachedLogo
+        ? `<img src="${cachedLogo}" class="w-full h-full object-contain rounded-xl bg-white p-1">`
+        : ipo.logo.initials;
+
       document.getElementById('detailContent').innerHTML = `
         <!-- Company Header Card -->
         <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
           <div id="detailLogoBox" class="w-14 h-14 rounded-2xl border font-extrabold text-base flex items-center justify-center shrink-0 ${ipo.logo.cls}">
-            ${ipo.logo.initials}
+            ${initLogoHtml}
           </div>
           <div class="flex-1">
             <div class="font-bold text-sm text-gray-900">${ipo.name}</div>
@@ -482,16 +713,17 @@
         <!-- Allotment Probability Meter -->
         <div class="bg-white rounded-2xl p-4 shadow-sm">
           <div class="flex justify-between items-center mb-2">
-            <span class="font-bold text-sm">🎯 Allotment Chance Calculator</span>
+            <span class="font-bold text-sm">🎯 Allotment Chance & Sub-GMP</span>
             <span class="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-bold">Retailer Odds</span>
           </div>
           <div class="flex items-center justify-between gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs">
             <span class="text-gray-600 font-semibold">Retailer Sub (Times):</span>
-            <input type="number" id="subTimesInput" value="1.0" step="0.5" min="0.1" oninput="updateAllotmentChance()" class="w-20 border border-gray-300 rounded-lg px-2 py-1 text-right font-bold bg-white">
+            <input type="number" id="subTimesInput" value="${ipo.subTimes || 1.0}" step="0.5" min="0.1" oninput="updateAllotmentChance()" class="w-20 border border-gray-300 rounded-lg px-2 py-1 text-right font-bold bg-white text-gray-900">
           </div>
           <div id="chanceResult" class="mt-2.5 text-xs text-gray-800 bg-blue-50/60 p-2.5 rounded-xl border border-blue-100">
             <span class="text-green-600 font-extrabold">100% Confirmed Allotment</span> (1 out of 1 applicant)
           </div>
+          <div id="subGmpFallbackBox" class="hidden mt-2 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200"></div>
         </div>
 
         <!-- Interactive Lot & Profit Calculator -->
@@ -499,7 +731,7 @@
           <div class="flex justify-between items-center mb-3">
             <span class="font-bold text-sm">🧮 My Lot & Profit Calculator</span>
             <div class="flex items-center gap-2">
-              <button onclick="updateLotCalc(-1)" class="w-7 h-7 rounded-lg bg-gray-200 font-bold text-sm">-</button>
+              <button onclick="updateLotCalc(-1)" class="w-7 h-7 rounded-lg bg-gray-200 text-gray-900 font-bold text-sm">-</button>
               <span id="calcLotDisplay" class="text-xs font-extrabold px-1">${retLots} Lot${retLots > 1 ? 's' : ''}</span>
               <button onclick="updateLotCalc(1)" class="w-7 h-7 rounded-lg bg-gray-800 text-white font-bold text-sm">+</button>
             </div>
@@ -561,13 +793,26 @@
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
+        // Real logo extract (src + lazy data-src dono check karna)
+        const imgs = Array.from(doc.querySelectorAll('img'));
+        for (const img of imgs) {
+          const rawSrc = img.getAttribute('data-src') || img.getAttribute('src') || '';
+          if (rawSrc && /logo|ipo|company|upload/i.test(rawSrc) && !/investorgain-logo|playstore|appstore/i.test(rawSrc)) {
+            const fullLogo = rawSrc.startsWith('http') ? rawSrc : 'https://www.investorgain.com' + (rawSrc.startsWith('/') ? '' : '/') + rawSrc;
+            logoCache[ipo.name] = fullLogo;
+            localStorage.setItem('logoCache', JSON.stringify(logoCache));
+            document.getElementById('detailLogoBox').innerHTML = `<img src="${fullLogo}" class="w-full h-full object-contain rounded-xl bg-white p-1">`;
+            renderList();
+            break;
+          }
+        }
+
         const allTables = Array.from(doc.querySelectorAll('table'));
         let sectionsHtml = '';
 
         allTables.forEach((t, idx) => {
           const rowsCount = t.querySelectorAll('tr').length;
           const txt = t.innerText.trim();
-          // Empty ya layout tables ko skip karna
           if (rowsCount < 2 || txt.length < 40 || idx > 10) return;
 
           let title = '📋 IPO Details';
@@ -580,7 +825,6 @@
           else if (low.includes('face value') || low.includes('issue size') || low.includes('listing at') || low.includes('registrar')) title = '📑 IPO Issue Overview & Registrar';
           else if (low.includes('promoter')) title = '👥 Promoter Holding';
 
-          // Live Retailer subscription times auto-fill in Allotment Calculator
           t.querySelectorAll('tr').forEach(tr => {
             const cells = tr.querySelectorAll('td, th');
             if (cells.length >= 2) {
@@ -627,6 +871,13 @@
     }
 
     function openAllotmentModal() {
+      const quickBox = document.getElementById('modalPanQuickList');
+      if (panVault.length) {
+        quickBox.innerHTML = `<div class="text-[11px] font-bold text-gray-500">Tap PAN to Copy before opening Registrar:</div>` +
+          panVault.map(p => `<button onclick="navigator.clipboard.writeText('${p.pan}'); alert('Copied ${p.label}: ${p.pan}')" class="w-full flex justify-between items-center px-3 py-2 bg-blue-50 text-blue-800 rounded-xl text-xs font-bold"><span>${p.label}</span><span class="font-mono">${p.pan} 📋</span></button>`).join('');
+      } else {
+        quickBox.innerHTML = '';
+      }
       document.getElementById('allotmentModal').classList.remove('hidden');
       document.getElementById('allotmentModal').classList.add('flex');
     }
