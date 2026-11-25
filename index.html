@@ -127,7 +127,6 @@
     }
 
     function cleanDateOnly(str) {
-      // "25-NovGMP: 20" me se sirf "25-Nov" nikalna
       const m = String(str || '').match(/(\d{1,2}[-\s][A-Za-z]{3}(?:[-\s]\d{2,4})?)/);
       return m ? m[1].trim() : String(str || 'TBA').replace(/GMP.*/i, '').trim();
     }
@@ -237,13 +236,15 @@
           const upperPrice = cleanNum(priceRaw.split('-').pop());
           if (!name || upperPrice <= 0 || openDt === 'TBA' || openDt === '-') return;
 
-          const linkEl = tr.querySelector('a[href*="/ipo/"]');
+          // Row ke andar koi bhi anchor tag (/ipo/ ya /gmp/) se slug aur id nikalna
+          const linkEl = tr.querySelector('a[href*="/ipo/"], a[href*="/gmp/"], a[href]');
           let slug = '', ipoId = '';
           if (linkEl) {
-            const parts = linkEl.getAttribute('href').split('/').filter(Boolean);
-            if (parts.length >= 3) {
-              slug = parts[1];
-              ipoId = parts[2];
+            const href = linkEl.getAttribute('href') || '';
+            const m = href.match(/\/(?:ipo|gmp)\/([^\/]+)\/(\d+)/i);
+            if (m) {
+              slug = m[1];
+              ipoId = m[2];
             }
           }
 
@@ -466,66 +467,76 @@
         <!-- Live Company Tables Container -->
         <div id="liveSubBox" class="space-y-3">
           <div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">
-            Fetching Live Subscription, Reservation, Financials & GMP History...
+            Loading Live Subscription, Reservation, Financials & GMP History...
           </div>
         </div>
 
         <button onclick="openAllotmentModal()" class="w-full py-3 rounded-xl bg-amber-500 text-white font-bold text-xs shadow">CHECK ALLOTMENT STATUS ↗</button>
       `;
 
-      if (ipo.ipoId && ipo.slug) {
-        try {
-          const res = await fetch(`${WORKER_URL}?mode=detail&id=${ipo.ipoId}&slug=${ipo.slug}`);
-          const html = await res.text();
-          const doc = new DOMParser().parseFromString(html, 'text/html');
+      // Slug agar missing ho toh company name se automatic generate karke fetch try karna
+      const autoSlug = ipo.slug || ipo.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-ipo';
+      const fetchUrl = ipo.ipoId
+        ? `${WORKER_URL}?mode=detail&id=${ipo.ipoId}&slug=${autoSlug}`
+        : `${WORKER_URL}?mode=detail&id=1&slug=${autoSlug}`;
 
-          // Real company logo agar page par available ho toh set karna
-          const imgEl = doc.querySelector('img[src*="logo"], .ipo-logo img, header img');
-          if (imgEl && imgEl.getAttribute('src') && !imgEl.getAttribute('src').includes('investorgain')) {
-            const src = imgEl.getAttribute('src').startsWith('http') ? imgEl.getAttribute('src') : 'https://www.investorgain.com' + imgEl.getAttribute('src');
-            document.getElementById('detailLogoBox').innerHTML = `<img src="${src}" class="w-full h-full object-contain rounded-xl">`;
-          }
+      try {
+        const res = await fetch(fetchUrl);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
 
-          // Saare important tables extract karna (Issue Details, Subscription, Reservation, Financials, GMP Trend)
-          const allTables = Array.from(doc.querySelectorAll('table'));
-          let sectionsHtml = '';
+        const imgEl = doc.querySelector('img[src*="logo"], .ipo-logo img, .company-logo img');
+        if (imgEl && imgEl.getAttribute('src') && !imgEl.getAttribute('src').includes('investorgain')) {
+          const src = imgEl.getAttribute('src').startsWith('http') ? imgEl.getAttribute('src') : 'https://www.investorgain.com' + imgEl.getAttribute('src');
+          document.getElementById('detailLogoBox').innerHTML = `<img src="${src}" class="w-full h-full object-contain rounded-xl">`;
+        }
 
-          allTables.forEach((t, idx) => {
-            const txt = t.innerText.trim();
-            if (txt.length < 30 || idx > 8) return;
+        const allTables = Array.from(doc.querySelectorAll('table'));
+        let sectionsHtml = '';
 
-            let title = '📋 IPO Details & Data';
-            const low = txt.toLowerCase();
-            if (low.includes('qib') || low.includes('subscription') || low.includes('nii')) title = '📈 Live Subscription Details';
-            else if (low.includes('gmp') || low.includes('kostak') || low.includes('sub2')) title = '📊 Day-by-Day GMP Trend';
-            else if (low.includes('revenue') || low.includes('profit') || low.includes('assets') || low.includes('net worth')) title = '🏢 Company Financials';
-            else if (low.includes('p/e') || low.includes('eps') || low.includes('ronw') || low.includes('roe')) title = '📌 KPI & Valuations';
-            else if (low.includes('face value') || low.includes('issue size') || low.includes('listing at')) title = '📑 IPO Issue Overview';
-            else if (low.includes('promoter')) title = '👥 Promoter Holding';
+        allTables.forEach((t, idx) => {
+          const txt = t.innerText.trim();
+          if (txt.length < 30 || idx > 10) return;
 
-            // "Individual" ya "Retail" ko clean "Retailer" dikhana
-            t.querySelectorAll('td, th').forEach(cell => {
-              if (/^retail(\s*investors?)?$/i.test(cell.innerText.trim())) {
-                cell.innerText = 'Retailer';
-              }
-            });
+          let title = '📋 IPO Details & Data';
+          const low = txt.toLowerCase();
+          if (low.includes('qib') || low.includes('subscription') || low.includes('nii')) title = '📈 Live Subscription Details';
+          else if (low.includes('gmp') || low.includes('kostak') || low.includes('sub2')) title = '📊 Day-by-Day GMP Trend';
+          else if (low.includes('revenue') || low.includes('profit') || low.includes('assets') || low.includes('net worth')) title = '🏢 Company Financials';
+          else if (low.includes('p/e') || low.includes('eps') || low.includes('ronw') || low.includes('roe')) title = '📌 KPI & Valuations';
+          else if (low.includes('face value') || low.includes('issue size') || low.includes('listing at') || low.includes('registrar')) title = '📑 IPO Issue Overview & Registrar';
+          else if (low.includes('promoter')) title = '👥 Promoter Holding';
 
-            t.className = 'w-full detail-table border border-gray-100 rounded-xl overflow-hidden';
-            sectionsHtml += `
-              <div class="bg-white rounded-2xl p-4 shadow-sm">
-                <div class="font-bold text-sm mb-2.5 text-gray-900">${title}</div>
-                <div class="overflow-x-auto">${t.outerHTML}</div>
-              </div>`;
+          t.querySelectorAll('td, th').forEach(cell => {
+            if (/^(retail|individual)(\s*investors?)?$/i.test(cell.innerText.trim())) {
+              cell.innerText = 'Retailer';
+            }
           });
 
-          if (sectionsHtml) {
-            document.getElementById('liveSubBox').innerHTML = sectionsHtml;
-          } else {
-            document.getElementById('liveSubBox').innerHTML = `<div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">Subscription data updates once bidding starts on ${ipo.open_date}.</div>`;
-          }
-        } catch (e) {
-          document.getElementById('liveSubBox').innerHTML = `<div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-red-500">Could not load extra tables. Tap refresh to retry.</div>`;
+          t.className = 'w-full detail-table border border-gray-100 rounded-xl overflow-hidden';
+          sectionsHtml += `
+            <div class="bg-white rounded-2xl p-4 shadow-sm">
+              <div class="font-bold text-sm mb-2.5 text-gray-900">${title}</div>
+              <div class="overflow-x-auto">${t.outerHTML}</div>
+            </div>`;
+        });
+
+        if (sectionsHtml) {
+          document.getElementById('liveSubBox').innerHTML = sectionsHtml;
+        } else {
+          document.getElementById('liveSubBox').innerHTML = `
+            <div class="bg-white rounded-2xl p-4 shadow-sm">
+              <div class="font-bold text-sm mb-2">📑 Issue Summary</div>
+              <div class="text-xs text-gray-600 space-y-1">
+                <div>• <b>Offer Window:</b> ${ipo.date_range}</div>
+                <div>• <b>Allotment Date:</b> ${ipo.allotment_date}</div>
+                <div>• <b>Listing Date:</b> ${ipo.listing_date}</div>
+                <div>• <b>Subscription Status:</b> Bidding opens on ${ipo.open_date}.</div>
+              </div>
+            </div>`;
         }
+      } catch (e) {
+        document.getElementById('liveSubBox').innerHTML = `<div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">Live subscription tables will appear once exchange bidding updates.</div>`;
       }
     }
 
