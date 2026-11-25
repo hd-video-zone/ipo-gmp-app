@@ -1,15 +1,18 @@
 {
-  "name": "IPO GMP & Fundamentals",
-  "short_name": "IPO GMP",
+  "name": "IPO Premium - Live GMP & Allotment",
+  "short_name": "IPO Premium",
   "start_url": "/ipo-gmp-app/",
+  "scope": "/ipo-gmp-app/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3310/3310624.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830284.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
