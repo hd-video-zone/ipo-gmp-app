@@ -19,7 +19,6 @@
     .tab-UPCOMING { border-bottom: 3px solid #f59e0b; color: #f59e0b !important; font-weight: 700; }
     .tab-CLOSED { border-bottom: 3px solid #ef4444; color: #ef4444 !important; font-weight: 700; }
     .tab-BUYBACK { border-bottom: 3px solid #9333ea; color: #9333ea !important; font-weight: 700; }
-    .tab-TOOLS { border-bottom: 3px solid #2563eb; color: #2563eb !important; font-weight: 700; }
     .detail-table th { background: #f3f4f6; color: #4b5563; font-weight: 700; padding: 8px 6px; font-size: 11px; text-align: left; }
     body.dark .detail-table th { background: #334155; color: #cbd5e1; }
     .detail-table td { padding: 8px 6px; font-size: 11px; border-top: 1px solid #f1f5f9; }
@@ -48,12 +47,11 @@
       <input type="text" id="searchInput" oninput="renderList()" placeholder="Search IPO or Buyback company..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500">
     </div>
 
-    <div class="grid grid-cols-5 text-center border-t border-b border-gray-200 text-[11px] font-bold text-gray-500 bg-white">
+    <div class="grid grid-cols-4 text-center border-t border-b border-gray-200 text-xs font-bold text-gray-500 bg-white">
       <button onclick="setStatus('OPEN')" id="btn-OPEN" class="py-3 tab-OPEN">OPEN</button>
       <button onclick="setStatus('UPCOMING')" id="btn-UPCOMING" class="py-3">UPCOMING</button>
       <button onclick="setStatus('CLOSED')" id="btn-CLOSED" class="py-3">CLOSED</button>
       <button onclick="setStatus('BUYBACK')" id="btn-BUYBACK" class="py-3">BUYBACK</button>
-      <button onclick="setStatus('TOOLS')" id="btn-TOOLS" class="py-3">VAULT</button>
     </div>
 
     <div id="filterBar" class="flex items-center justify-between px-3.5 py-2 bg-white border-b border-gray-200 text-xs font-bold">
@@ -79,7 +77,7 @@
     </div>
 
     <div class="px-4 py-1 bg-gray-50 border-b border-gray-200 flex justify-between text-[10px] text-gray-500">
-      <span>Real Logos • AngelOne/Groww • Buybacks</span>
+      <span>Live GMP • Buybacks • Allotment</span>
       <span id="lastUpdated" class="text-green-600 font-semibold">Syncing Live...</span>
     </div>
   </header>
@@ -88,7 +86,7 @@
     <div class="text-center py-12 text-gray-400 text-sm">Loading Live Data...</div>
   </main>
 
-  <!-- Full Detail Screen Modal -->
+  <!-- Full Detail Screen Modal (For Both IPO & Buyback) -->
   <div id="detailScreen" class="fixed inset-0 bg-[#f2f4f7] z-50 hidden flex-col max-w-md mx-auto overflow-y-auto">
     <div class="bg-white sticky top-0 px-3 py-2.5 border-b flex items-center justify-between z-20 shadow-sm gap-2">
       <button onclick="closeDetail()" class="flex items-center gap-1 bg-gray-100 active:bg-gray-200 px-3.5 py-2 rounded-xl font-bold text-sm text-gray-800 shrink-0">
@@ -107,14 +105,14 @@
   <div id="applyModal" class="fixed inset-0 bg-black/60 z-50 hidden items-end justify-center max-w-md mx-auto">
     <div class="bg-white w-full rounded-t-2xl p-4 space-y-3">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 id="applyTitle" class="font-bold text-sm">Apply IPO via Broker / UPI</h3>
+        <h3 id="applyTitle" class="font-bold text-sm">Apply via Broker / UPI</h3>
         <button onclick="closeApplyModal()" class="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm">✕</button>
       </div>
       <div class="grid grid-cols-2 gap-2.5 text-xs font-bold">
-        <a href="https://www.angelone.in/ipo" target="_blank" class="p-3.5 border rounded-xl text-center bg-blue-50 text-blue-700 border-blue-200">Angel One IPO ↗</a>
-        <a href="https://groww.in/ipo" target="_blank" class="p-3.5 border rounded-xl text-center bg-emerald-50 text-emerald-700 border-emerald-200">Groww IPO ↗</a>
+        <a href="https://www.angelone.in/ipo" target="_blank" class="p-3.5 border rounded-xl text-center bg-blue-50 text-blue-700 border-blue-200">Angel One ↗</a>
+        <a href="https://groww.in/ipo" target="_blank" class="p-3.5 border rounded-xl text-center bg-emerald-50 text-emerald-700 border-emerald-200">Groww ↗</a>
         <a href="https://kite.zerodha.com/ipo" target="_blank" class="p-3 border rounded-xl text-center bg-orange-50 text-orange-700 border-orange-200">Zerodha Kite ↗</a>
-        <a href="https://upstox.com/ipo/" target="_blank" class="p-3 border rounded-xl text-center bg-purple-50 text-purple-700 border-purple-200">Upstox IPO ↗</a>
+        <a href="https://upstox.com/ipo/" target="_blank" class="p-3 border rounded-xl text-center bg-purple-50 text-purple-700 border-purple-200">Upstox ↗</a>
       </div>
     </div>
   </div>
@@ -126,7 +124,6 @@
         <h3 class="font-bold text-sm">Check Live IPO Allotment Status</h3>
         <button onclick="document.getElementById('allotmentModal').classList.add('hidden')" class="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 font-bold text-sm">✕</button>
       </div>
-      <div id="modalPanQuickList" class="space-y-1.5"></div>
       <div class="space-y-2 text-xs font-bold pt-1">
         <a href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" class="block p-3 border rounded-xl bg-gray-50">1. Link Intime (MUFG Intime) ↗</a>
         <a href="https://kosmic.kfintech.com/ipostatus/" target="_blank" class="block p-3 border rounded-xl bg-gray-50">2. KFin Technologies (KFinTech) ↗</a>
@@ -141,7 +138,6 @@
   <nav class="fixed bottom-0 inset-x-0 max-w-md mx-auto bg-white border-t border-gray-200 flex justify-around items-center py-2 text-[11px] font-semibold text-gray-500 z-30">
     <button onclick="setStatus('OPEN')" class="flex flex-col items-center text-amber-500"><span class="text-lg">🏠</span><span>Live IPOs</span></button>
     <button onclick="setStatus('BUYBACK')" class="flex flex-col items-center"><span class="text-lg">💎</span><span>Buybacks</span></button>
-    <button onclick="setStatus('TOOLS')" class="flex flex-col items-center"><span class="text-lg">🧰</span><span>PAN & Tools</span></button>
     <button onclick="openAllotmentModal()" class="flex flex-col items-center"><span class="text-lg">📢</span><span>Allotment</span></button>
   </nav>
 
@@ -151,10 +147,7 @@
     let allBuybacks = [];
     let currentTab = 'OPEN';
     let savedNames = JSON.parse(localStorage.getItem('savedIpos') || '[]');
-    let panVault = JSON.parse(localStorage.getItem('panVault') || '[]');
-    let myAllotted = JSON.parse(localStorage.getItem('myAllotted') || '[]');
-    let userBudget = parseFloat(localStorage.getItem('userBudget') || '150000');
-    let logoCache = JSON.parse(localStorage.getItem('logoCache_v2') || '{}');
+    let logoCache = JSON.parse(localStorage.getItem('logoCache_v3') || '{}');
     let activeCalcIpo = null;
     let calcLots = 1;
 
@@ -219,22 +212,13 @@
       return { initials, cls: colors[idx % colors.length] };
     }
 
-    function isValidCompanyLogo(url) {
+    function isValidRealLogo(url) {
       if (!url) return false;
       const low = url.toLowerCase();
-      // InvestorGain ya generic UI icons ko strictly reject karna
-      if (/investorgain|chittorgarh|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads/i.test(low)) {
+      if (/investorgain-logo|chittorgarh|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads|default/i.test(low)) {
         return false;
       }
-      return /\.(png|jpg|jpeg|webp|svg)/i.test(low) || low.includes('favicons');
-    }
-
-    function getCompanyDomainFallback(name) {
-      const clean = name
-        .toLowerCase()
-        .replace(/\b(ltd|limited|india|industries|technologies|tech|engineering|nse|bse|sme|private|pvt|corp|corporation|enterprises|solutions|systems)\b/g, '')
-        .replace(/[^a-z0-9]/g, '');
-      return clean.length >= 3 ? `https://www.google.com/s2/favicons?domain=${clean}.com&sz=128` : '';
+      return /\.(png|jpg|jpeg|webp|svg)/i.test(low);
     }
 
     function estimateFromSubscription(upperPrice, subTimes, category) {
@@ -293,23 +277,51 @@
         const res = await fetch(`${WORKER_URL}?mode=buyback&t=${Date.now()}`);
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        const rows = doc.querySelectorAll('table tbody tr');
+        const table = doc.querySelector('table');
+        if (!table) return;
+
+        const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th')).map(th => th.innerText.trim().toLowerCase());
+        const findCol = (keys, fallback) => {
+          const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
+          return idx !== -1 ? idx : fallback;
+        };
+
+        const idxComp = findCol(['company', 'name'], 0);
+        const idxRec = findCol(['record'], 1);
+        const idxOpen = findCol(['open'], 2);
+        const idxClose = findCol(['close'], 3);
+        const idxPrice = findCol(['buyback price', 'price'], 4);
+        const idxCmp = findCol(['cmp', 'market'], 5);
+        const idxSize = findCol(['size', 'amount'], 6);
+        const idxType = findCol(['type', 'mode'], 7);
+
+        const rows = table.querySelectorAll('tbody tr');
         const list = [];
         rows.forEach((tr, idx) => {
           const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
-          if (cols.length < 5) return;
-          const company = cols[0].replace(/\s+/g, ' ').trim();
+          if (cols.length < 4) return;
+          const company = (cols[idxComp] || '').replace(/\s+/g, ' ').trim();
           if (!company || company.toLowerCase().includes('company')) return;
+
+          const linkEl = tr.querySelector('a[href]');
+          let detailUrl = '';
+          if (linkEl) {
+            const href = linkEl.getAttribute('href') || '';
+            if (href.startsWith('http')) detailUrl = href;
+            else if (href.startsWith('/')) detailUrl = 'https://www.investorgain.com' + href;
+          }
+
           list.push({
             id: idx + 1,
             company,
-            recordDate: cols[1] || 'TBA',
-            openDate: cols[2] || 'TBA',
-            closeDate: cols[3] || 'TBA',
-            type: cols[4] || 'Tender Offer',
-            buybackPrice: cols[5] || 'TBA',
-            cmp: cols[6] || '-',
-            issueSize: cols[7] || 'TBA',
+            detailUrl,
+            recordDate: cols[idxRec] || 'TBA',
+            openDate: cols[idxOpen] || 'TBA',
+            closeDate: cols[idxClose] || 'TBA',
+            buybackPrice: cols[idxPrice] || 'TBA',
+            cmp: cols[idxCmp] || '-',
+            issueSize: cols[idxSize] || 'TBA',
+            type: cols[idxType] || 'Tender Offer',
             logo: getLogoBadge(company, idx)
           });
         });
@@ -442,10 +454,10 @@
 
     function setStatus(st) {
       currentTab = st;
-      ['OPEN', 'UPCOMING', 'CLOSED', 'BUYBACK', 'TOOLS'].forEach(t => {
+      ['OPEN', 'UPCOMING', 'CLOSED', 'BUYBACK'].forEach(t => {
         document.getElementById('btn-' + t).className = 'py-3 ' + (t === st ? 'tab-' + t : '');
       });
-      document.getElementById('filterBar').style.display = (st === 'TOOLS' || st === 'BUYBACK') ? 'none' : 'flex';
+      document.getElementById('filterBar').style.display = st === 'BUYBACK' ? 'none' : 'flex';
       renderList();
     }
 
@@ -454,8 +466,8 @@
     }
 
     function addCalendarReminder(name, closeDt) {
-      const title = encodeURIComponent(`Apply IPO: ${name} (Last Day ${closeDt})`);
-      const details = encodeURIComponent(`Check Live Subscription & Apply before 3:00 PM via Angel One / Groww.`);
+      const title = encodeURIComponent(`Apply: ${name} (Last Day ${closeDt})`);
+      const details = encodeURIComponent(`Check Live Details & Apply before 3:00 PM via Angel One / Groww.`);
       window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}`, '_blank');
     }
 
@@ -465,7 +477,7 @@
       const box = document.getElementById('ipoList');
 
       if (!list.length) {
-        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">Syncing Live Share Buybacks... Tap 🔄 if loading takes a moment.</div>`;
+        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">No Live Buyback issues found right now. Tap 🔄 to refresh.</div>`;
         return;
       }
 
@@ -474,15 +486,17 @@
         const cmpVal = cleanNum(b.cmp);
         const diff = (bbVal > 0 && cmpVal > 0) ? (bbVal - cmpVal) : 0;
         const gainPct = (diff > 0 && cmpVal > 0) ? ((diff / cmpVal) * 100).toFixed(1) : 0;
-        const domainLogo = getCompanyDomainFallback(b.company);
+        const cachedLogo = isValidRealLogo(logoCache[b.company]) ? logoCache[b.company] : '';
+
+        const logoHtml = cachedLogo
+          ? `<img src="${cachedLogo}" class="w-11 h-11 rounded-xl object-contain bg-white border p-1 shrink-0">`
+          : `<div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${b.logo.cls}">${b.logo.initials}</div>`;
 
         return `
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div class="flex items-center justify-between gap-2.5 mb-3">
             <div class="flex items-center gap-2.5 overflow-hidden">
-              <div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 overflow-hidden ${b.logo.cls}">
-                ${domainLogo ? `<img src="${domainLogo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-7 h-7 object-contain"><span style="display:none">${b.logo.initials}</span>` : b.logo.initials}
-              </div>
+              ${logoHtml}
               <div>
                 <h3 class="font-bold text-[15px] text-gray-900 leading-snug">${b.company}</h3>
                 <span class="inline-block mt-0.5 text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700">${b.type}</span>
@@ -492,149 +506,125 @@
           </div>
 
           <div class="space-y-1.5 text-xs border-b border-gray-100 pb-3">
-            <div class="flex justify-between"><span class="text-gray-500">Buyback Offer Price:</span><span class="font-extrabold text-purple-700">${b.buybackPrice}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Buyback Offer Price:</span><span class="font-extrabold text-purple-700">${b.buybackPrice.includes('₹') ? b.buybackPrice : '₹' + b.buybackPrice}</span></div>
             <div class="flex justify-between"><span class="text-gray-500">Current Market Price:</span><span class="font-bold text-gray-900">${b.cmp}</span></div>
-            ${diff > 0 ? `<div class="flex justify-between"><span class="text-gray-500">Est. Arbitrage Spread:</span><span class="font-bold text-green-600">+₹${diff.toFixed(0)}/sh (${gainPct}%)</span></div>` : ''}
-            <div class="flex justify-between"><span class="text-gray-500">Issue Size:</span><span class="font-bold text-gray-900">${b.issueSize}</span></div>
+            ${diff > 0 ? `<div class="flex justify-between"><span class="text-gray-500">Est. Profit / Share:</span><span class="font-bold text-green-600">+₹${diff.toFixed(0)} (${gainPct}%)</span></div>` : ''}
+            <div class="flex justify-between"><span class="text-gray-500">Buyback Size:</span><span class="font-bold text-gray-900">${b.issueSize}</span></div>
           </div>
 
-          <div class="space-y-1.5 text-xs pt-3">
+          <div class="space-y-1.5 text-xs py-3">
             <div class="flex justify-between"><span class="text-gray-500">Record Date:</span><span class="font-bold text-amber-600">${b.recordDate}</span></div>
             <div class="flex justify-between"><span class="text-gray-500">Offer Open - Close:</span><span class="font-bold text-gray-900">${b.openDate} - ${b.closeDate}</span></div>
+          </div>
+
+          <div class="flex items-center gap-2.5 pt-1">
+            <button onclick="openBuybackDetail(${b.id})" class="flex-1 py-2.5 rounded-full border-2 border-gray-700 font-bold text-xs">VIEW FULL DETAILS</button>
+            <button onclick="openApplyModal('${b.company} Buyback')" class="flex-1 py-2.5 rounded-full bg-purple-600 text-white font-bold text-xs">TENDER / APPLY</button>
           </div>
         </div>`;
       }).join('');
     }
 
-    function renderToolsVault() {
-      const openIpos = allIpos.filter(i => i.status === 'OPEN');
-      let remaining = userBudget;
-      const affordable = [];
-      openIpos.forEach(i => {
-        const req = i.retailerShares * i.upper_price;
-        if (req <= remaining) {
-          affordable.push({ name: i.name, req, profit: i.gmp_retailer });
-          remaining -= req;
-        }
-      });
+    async function openBuybackDetail(id) {
+      const b = allBuybacks.find(x => x.id === id);
+      if (!b) return;
 
-      const panHtml = panVault.length
-        ? panVault.map((p, idx) => `
-          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs">
-            <div><div class="font-bold">${p.label}</div><div class="text-gray-500 font-mono">${p.pan}</div></div>
-            <div class="flex gap-1.5">
-              <button onclick="navigator.clipboard.writeText('${p.pan}'); alert('Copied: ${p.pan}')" class="px-2.5 py-1 bg-blue-600 text-white rounded-lg font-bold">Copy</button>
-              <button onclick="removePan(${idx})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold">✕</button>
-            </div>
-          </div>`).join('')
-        : `<div class="text-xs text-gray-400">No PAN saved yet. Add family PANs below for 1-tap allotment check.</div>`;
+      document.getElementById('detailHeaderTitle').innerText = b.company + ' Buyback';
+      document.getElementById('detailApplyBtn').onclick = () => openApplyModal(b.company + ' Buyback');
+      document.getElementById('detailShareBtn').onclick = () => shareText(b.company + ' Buyback', b.buybackPrice, b.type);
+      document.getElementById('detailScreen').classList.remove('hidden');
+      document.getElementById('detailScreen').classList.add('flex');
 
-      const allottedHtml = myAllotted.length
-        ? myAllotted.map((a, idx) => `
-          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs">
-            <div><div class="font-bold">${a.name}</div><div class="text-green-600 font-bold">Profit/Loss: ₹${Number(a.pnl).toLocaleString('en-IN')}</div></div>
-            <button onclick="removeAllotted(${idx})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold">✕</button>
-          </div>`).join('')
-        : `<div class="text-xs text-gray-400">Track your allotted IPO listing gains here.</div>`;
+      const cachedLogo = isValidRealLogo(logoCache[b.company]) ? logoCache[b.company] : '';
+      const initLogoHtml = cachedLogo
+        ? `<img src="${cachedLogo}" class="w-10 h-10 object-contain">`
+        : b.logo.initials;
 
-      const totalPnl = myAllotted.reduce((sum, x) => sum + Number(x.pnl || 0), 0);
-
-      document.getElementById('ipoList').innerHTML = `
-        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-sm">🪪 Family PAN Allotment Vault</span>
-            <span class="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-bold">Offline Safe</span>
+      document.getElementById('detailContent').innerHTML = `
+        <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+          <div id="detailLogoBox" class="w-14 h-14 rounded-2xl border font-extrabold text-base flex items-center justify-center shrink-0 bg-white overflow-hidden ${b.logo.cls}">
+            ${initLogoHtml}
           </div>
-          <div class="space-y-2">${panHtml}</div>
-          <div class="flex gap-2 pt-1">
-            <input type="text" id="panNameInput" placeholder="Name (e.g. Self)" class="w-1/3 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
-            <input type="text" id="panNumInput" placeholder="ABCDE1234F" maxlength="10" class="w-1/2 border rounded-xl px-2.5 py-2 text-xs uppercase text-gray-900">
-            <button onclick="addPan()" class="flex-1 bg-gray-800 text-white rounded-xl font-bold text-xs">Add</button>
+          <div class="flex-1">
+            <div class="font-bold text-sm text-gray-900">${b.company}</div>
+            <div class="text-xs text-purple-700 font-bold mt-0.5">${b.type} • Buyback Price: ${b.buybackPrice}</div>
+            <div class="text-xs text-gray-500 mt-0.5">CMP: ${b.cmp} • Size: ${b.issueSize}</div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <div class="font-bold text-sm">💰 IPO Capital & Budget Planner</div>
-          <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-xs">
-            <span class="font-semibold">Available Funds (₹):</span>
-            <input type="number" value="${userBudget}" onchange="updateBudget(this.value)" class="w-28 border rounded-lg px-2 py-1 text-right font-bold text-gray-900">
-          </div>
-          <div class="text-xs text-gray-600">
-            With <b>₹${userBudget.toLocaleString('en-IN')}</b>, you can apply in <b>${affordable.length} OPEN IPO(s)</b> simultaneously:
-          </div>
-          <div class="space-y-1.5">
-            ${affordable.map(a => `<div class="flex justify-between text-xs bg-green-50/70 p-2 rounded-lg"><span class="font-bold">${a.name}</span><span>₹${a.req.toLocaleString('en-IN')} (Est. +₹${a.profit.toLocaleString('en-IN')})</span></div>`).join('') || '<div class="text-xs text-gray-400">No OPEN IPO fits in this budget right now.</div>'}
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="font-bold text-sm mb-3">📅 Buyback Timeline</div>
+          <div class="grid grid-cols-3 text-center text-[11px]">
+            <div><div class="w-3 h-3 rounded-full bg-amber-500 mx-auto mb-1"></div><div class="font-bold">Record Date</div><div class="text-gray-500">${b.recordDate}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-purple-600 mx-auto mb-1"></div><div class="font-bold">Offer Open</div><div class="text-gray-500">${b.openDate}</div></div>
+            <div><div class="w-3 h-3 rounded-full bg-gray-400 mx-auto mb-1"></div><div class="font-bold">Offer Close</div><div class="text-gray-500">${b.closeDate}</div></div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-sm">📈 My Allotted IPO Profit Book</span>
-            <span class="text-xs font-extrabold ${totalPnl >= 0 ? 'text-green-600' : 'text-red-600'}">Total: ₹${totalPnl.toLocaleString('en-IN')}</span>
+        <div id="liveSubBox" class="space-y-3">
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-xs text-gray-500">
+            Loading Full Buyback Tables, Acceptance Ratio, Entitlement & Financials...
           </div>
-          <div class="space-y-2">${allottedHtml}</div>
-          <div class="flex gap-2 pt-1">
-            <input type="text" id="allotNameInput" placeholder="IPO Name" class="w-1/2 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
-            <input type="number" id="allotPnlInput" placeholder="Gain/Loss ₹" class="w-1/3 border rounded-xl px-2.5 py-2 text-xs text-gray-900">
-            <button onclick="addAllotted()" class="flex-1 bg-green-600 text-white rounded-xl font-bold text-xs">Save</button>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
-          <div><div class="font-bold text-sm">💾 Backup Personal Data</div><div class="text-[11px] text-gray-500">Export PANs, Saved & Profit Book</div></div>
-          <button onclick="exportBackup()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs">Export JSON</button>
         </div>
       `;
+
+      if (b.detailUrl) {
+        try {
+          const res = await fetch(`${WORKER_URL}?mode=page&url=${encodeURIComponent(b.detailUrl)}`);
+          const html = await res.text();
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+
+          extractRealLogoFromDoc(doc, b.company);
+
+          const allTables = Array.from(doc.querySelectorAll('table'));
+          let sectionsHtml = '';
+          allTables.forEach((t, idx) => {
+            const rowsCount = t.querySelectorAll('tr').length;
+            const txt = t.innerText.trim();
+            if (rowsCount < 2 || txt.length < 40 || idx > 10) return;
+
+            let title = '📋 Buyback Details';
+            const low = txt.toLowerCase();
+            if (low.includes('entitlement') || low.includes('reserved') || low.includes('small shareholder')) title = '📊 Small Shareholder Entitlement & Ratio';
+            else if (low.includes('revenue') || low.includes('profit') || low.includes('assets')) title = '🏢 Company Financials';
+            else if (low.includes('registrar') || low.includes('record date')) title = '📑 Buyback Overview & Registrar';
+
+            t.className = 'w-full detail-table border border-gray-100 rounded-xl overflow-hidden';
+            sectionsHtml += `
+              <div class="bg-white rounded-2xl p-4 shadow-sm">
+                <div class="font-bold text-sm mb-2.5 text-gray-900">${title}</div>
+                <div class="overflow-x-auto">${t.outerHTML}</div>
+              </div>`;
+          });
+
+          if (sectionsHtml) {
+            document.getElementById('liveSubBox').innerHTML = sectionsHtml;
+          }
+        } catch (e) {}
+      }
     }
 
-    function addPan() {
-      const label = document.getElementById('panNameInput').value.trim() || 'Member';
-      const pan = document.getElementById('panNumInput').value.trim().toUpperCase();
-      if (pan.length !== 10) return alert('Enter valid 10-character PAN');
-      panVault.push({ label, pan });
-      localStorage.setItem('panVault', JSON.stringify(panVault));
-      renderToolsVault();
-    }
-
-    function removePan(idx) {
-      panVault.splice(idx, 1);
-      localStorage.setItem('panVault', JSON.stringify(panVault));
-      renderToolsVault();
-    }
-
-    function updateBudget(val) {
-      userBudget = parseFloat(val) || 0;
-      localStorage.setItem('userBudget', String(userBudget));
-      renderToolsVault();
-    }
-
-    function addAllotted() {
-      const name = document.getElementById('allotNameInput').value.trim();
-      const pnl = parseFloat(document.getElementById('allotPnlInput').value) || 0;
-      if (!name) return;
-      myAllotted.push({ name, pnl });
-      localStorage.setItem('myAllotted', JSON.stringify(myAllotted));
-      renderToolsVault();
-    }
-
-    function removeAllotted(idx) {
-      myAllotted.splice(idx, 1);
-      localStorage.setItem('myAllotted', JSON.stringify(myAllotted));
-      renderToolsVault();
-    }
-
-    function exportBackup() {
-      const data = JSON.stringify({ savedNames, panVault, myAllotted, userBudget }, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'ipo-premium-backup.json';
-      a.click();
+    function extractRealLogoFromDoc(doc, companyName) {
+      const imgs = Array.from(doc.querySelectorAll('img'));
+      for (const img of imgs) {
+        const rawSrc = img.getAttribute('data-src') || img.getAttribute('src') || '';
+        const alt = (img.getAttribute('alt') || '').toLowerCase();
+        const firstWord = companyName.split(' ')[0].toLowerCase();
+        if (rawSrc && (alt.includes(firstWord) || /ipo_logo|company|upload/i.test(rawSrc))) {
+          const fullLogo = rawSrc.startsWith('http') ? rawSrc : 'https://www.investorgain.com' + (rawSrc.startsWith('/') ? '' : '/') + rawSrc;
+          if (isValidRealLogo(fullLogo)) {
+            logoCache[companyName] = fullLogo;
+            localStorage.setItem('logoCache_v3', JSON.stringify(logoCache));
+            const box = document.getElementById('detailLogoBox');
+            if (box) box.innerHTML = `<img src="${fullLogo}" class="w-10 h-10 object-contain">`;
+            renderList();
+            break;
+          }
+        }
+      }
     }
 
     function renderList() {
-      if (currentTab === 'TOOLS') return renderToolsVault();
       if (currentTab === 'BUYBACK') return renderBuybacks();
 
       const mainOk = document.getElementById('chkMainboard').checked;
@@ -661,12 +651,11 @@
 
       box.innerHTML = list.map(ipo => {
         const isSaved = savedNames.includes(ipo.name);
-        const realLogo = isValidCompanyLogo(logoCache[ipo.name]) ? logoCache[ipo.name] : getCompanyDomainFallback(ipo.name);
+        const realLogo = isValidRealLogo(logoCache[ipo.name]) ? logoCache[ipo.name] : '';
 
         const logoHtml = realLogo
-          ? `<div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 overflow-hidden bg-white ${ipo.logo.cls}">
-               <img src="${realLogo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-8 h-8 object-contain">
-               <span style="display:none">${ipo.logo.initials}</span>
+          ? `<div class="w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 overflow-hidden bg-white">
+               <img src="${realLogo}" class="w-8 h-8 object-contain">
              </div>`
           : `<div class="w-11 h-11 rounded-xl border font-extrabold text-sm flex items-center justify-center shrink-0 ${ipo.logo.cls}">${ipo.logo.initials}</div>`;
 
@@ -778,9 +767,9 @@
       document.getElementById('detailScreen').classList.remove('hidden');
       document.getElementById('detailScreen').classList.add('flex');
 
-      const realLogo = isValidCompanyLogo(logoCache[ipo.name]) ? logoCache[ipo.name] : getCompanyDomainFallback(ipo.name);
+      const realLogo = isValidRealLogo(logoCache[ipo.name]) ? logoCache[ipo.name] : '';
       const initLogoHtml = realLogo
-        ? `<img src="${realLogo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-10 h-10 object-contain"><span style="display:none">${ipo.logo.initials}</span>`
+        ? `<img src="${realLogo}" class="w-10 h-10 object-contain">`
         : ipo.logo.initials;
 
       document.getElementById('detailContent').innerHTML = `
@@ -887,23 +876,7 @@
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        // Strict Real Company Logo Extractor (InvestorGain logo strictly ignored)
-        const imgs = Array.from(doc.querySelectorAll('img'));
-        for (const img of imgs) {
-          const rawSrc = img.getAttribute('data-src') || img.getAttribute('src') || '';
-          const alt = (img.getAttribute('alt') || '').toLowerCase();
-          const firstWord = ipo.name.split(' ')[0].toLowerCase();
-          if (rawSrc && (alt.includes(firstWord) || /company|ipo_logo|client/i.test(rawSrc))) {
-            const fullLogo = rawSrc.startsWith('http') ? rawSrc : 'https://www.investorgain.com' + (rawSrc.startsWith('/') ? '' : '/') + rawSrc;
-            if (isValidCompanyLogo(fullLogo)) {
-              logoCache[ipo.name] = fullLogo;
-              localStorage.setItem('logoCache_v2', JSON.stringify(logoCache));
-              document.getElementById('detailLogoBox').innerHTML = `<img src="${fullLogo}" class="w-10 h-10 object-contain">`;
-              renderList();
-              break;
-            }
-          }
-        }
+        extractRealLogoFromDoc(doc, ipo.name);
 
         const allTables = Array.from(doc.querySelectorAll('table'));
         let sectionsHtml = '';
@@ -969,19 +942,12 @@
     }
 
     function openAllotmentModal() {
-      const quickBox = document.getElementById('modalPanQuickList');
-      if (panVault.length) {
-        quickBox.innerHTML = `<div class="text-[11px] font-bold text-gray-500">Tap PAN to Copy before opening Registrar:</div>` +
-          panVault.map(p => `<button onclick="navigator.clipboard.writeText('${p.pan}'); alert('Copied ${p.label}: ${p.pan}')" class="w-full flex justify-between items-center px-3 py-2 bg-blue-50 text-blue-800 rounded-xl text-xs font-bold"><span>${p.label}</span><span class="font-mono">${p.pan} 📋</span></button>`).join('');
-      } else {
-        quickBox.innerHTML = '';
-      }
       document.getElementById('allotmentModal').classList.remove('hidden');
       document.getElementById('allotmentModal').classList.add('flex');
     }
 
     function shareText(name, gmp, pct) {
-      const txt = `${name} Live GMP: ₹${gmp} (${pct}%). Check Live Subscription & Allotment!`;
+      const txt = `${name}: ${gmp} (${pct}). Check Live Details & Allotment!`;
       if (navigator.share) navigator.share({ title: name, text: txt });
       else alert(txt);
     }
