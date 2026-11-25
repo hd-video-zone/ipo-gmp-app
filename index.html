@@ -277,55 +277,93 @@
         const res = await fetch(`${WORKER_URL}?mode=buyback&t=${Date.now()}`);
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        const tables = Array.from(doc.querySelectorAll('table'));
-        let bestTable = tables.find(t => t.innerText.toLowerCase().includes('record date') || t.innerText.toLowerCase().includes('buyback price')) || tables[0];
-        if (!bestTable) return;
-
-        const headers = Array.from(bestTable.querySelectorAll('thead th, tr:first-child th, tr:first-child td')).map(th => th.innerText.trim().toLowerCase());
-        const findCol = (keys, fallback) => {
-          const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
-          return idx !== -1 ? idx : fallback;
-        };
-
-        const idxComp = findCol(['company', 'name', 'stock'], 0);
-        const idxRec = findCol(['record'], 1);
-        const idxOpen = findCol(['open'], 2);
-        const idxClose = findCol(['close'], 3);
-        const idxPrice = findCol(['buyback price', 'offer price', 'price'], 4);
-        const idxCmp = findCol(['cmp', 'market', 'current'], 5);
-        const idxSize = findCol(['size', 'amount'], 6);
-        const idxType = findCol(['type', 'mode', 'status'], 7);
-
-        const rows = bestTable.querySelectorAll('tbody tr, tr');
         const list = [];
-        rows.forEach((tr, idx) => {
-          const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
-          if (cols.length < 4) return;
-          const company = (cols[idxComp] || '').replace(/\s+/g, ' ').trim();
-          if (!company || /company|stock name/i.test(company)) return;
 
-          const linkEl = tr.querySelector('a[href]');
-          let detailUrl = '';
-          if (linkEl) {
-            const href = linkEl.getAttribute('href') || '';
-            if (href.startsWith('http')) detailUrl = href;
-            else if (href.startsWith('/')) detailUrl = 'https://investorzone.in' + href;
-          }
+        // 1. Standard Table Parser (Chittorgarh / Table layout)
+        const tables = Array.from(doc.querySelectorAll('table'));
+        const bestTable = tables.find(t => /record|buyback|offer price/i.test(t.innerText));
 
-          list.push({
-            id: idx + 1,
-            company,
-            detailUrl,
-            recordDate: cols[idxRec] || 'TBA',
-            openDate: cols[idxOpen] || 'TBA',
-            closeDate: cols[idxClose] || 'TBA',
-            buybackPrice: cols[idxPrice] || 'TBA',
-            cmp: cols[idxCmp] || '-',
-            issueSize: cols[idxSize] || 'TBA',
-            type: cols[idxType] || 'Tender Offer',
-            logo: getLogoBadge(company, idx)
+        if (bestTable) {
+          const headers = Array.from(bestTable.querySelectorAll('thead th, tr:first-child th, tr:first-child td')).map(th => th.innerText.trim().toLowerCase());
+          const findCol = (keys, fallback) => {
+            const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
+            return idx !== -1 ? idx : fallback;
+          };
+
+          const idxComp = findCol(['company', 'name'], 0);
+          const idxRec = findCol(['record'], 1);
+          const idxOpen = findCol(['open'], 2);
+          const idxClose = findCol(['close'], 3);
+          const idxPrice = findCol(['buyback price', 'price'], 4);
+          const idxCmp = findCol(['cmp', 'market'], 5);
+          const idxSize = findCol(['size', 'amount'], 6);
+          const idxType = findCol(['type', 'mode'], 7);
+
+          bestTable.querySelectorAll('tbody tr, tr').forEach((tr, idx) => {
+            const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+            if (cols.length < 4) return;
+            const company = (cols[idxComp] || '').replace(/\s+/g, ' ').trim();
+            if (!company || /company|stock name/i.test(company)) return;
+
+            const linkEl = tr.querySelector('a[href]');
+            let detailUrl = '';
+            if (linkEl) {
+              const href = linkEl.getAttribute('href') || '';
+              detailUrl = href.startsWith('http') ? href : 'https://www.chittorgarh.com' + href;
+            }
+
+            list.push({
+              id: idx + 1,
+              company,
+              detailUrl,
+              recordDate: cols[idxRec] || 'TBA',
+              openDate: cols[idxOpen] || 'TBA',
+              closeDate: cols[idxClose] || 'TBA',
+              buybackPrice: cols[idxPrice] || 'TBA',
+              cmp: cols[idxCmp] || '-',
+              issueSize: cols[idxSize] || 'TBA',
+              type: cols[idxType] || 'Tender Offer',
+              logo: getLogoBadge(company, idx)
+            });
           });
-        });
+        }
+
+        // 2. Card / Div Parser (InvestorZone layout fallback)
+        if (!list.length) {
+          const links = Array.from(doc.querySelectorAll('a[href*="/buyback/"]'));
+          const seen = new Set();
+          links.forEach((a, idx) => {
+            const href = a.getAttribute('href') || '';
+            const card = a.closest('div[class*="card"], div[class*="border"], tr, li') || a.parentElement;
+            const txt = (card ? card.innerText : a.innerText).replace(/\s+/g, ' ').trim();
+            const titleEl = card ? card.querySelector('h2, h3, h4, strong, b, a') : a;
+            const company = (titleEl ? titleEl.innerText : a.innerText).replace(/Buyback.*/i, '').trim();
+            if (!company || company.length < 3 || seen.has(company)) return;
+            seen.add(company);
+
+            const priceM = txt.match(/(?:Buyback\s*Price|Offer\s*Price|Price)[^\d₹]*₹?\s*([\d,]+(?:\.\d+)?)/i);
+            const cmpM = txt.match(/(?:CMP|Current\s*Price)[^\d₹]*₹?\s*([\d,]+(?:\.\d+)?)/i);
+            const recM = txt.match(/Record\s*Date[^\dA-Za-z]*(\d{1,2}\s*[A-Za-z]{3,9}(?:\s*\d{4})?)/i);
+            const openM = txt.match(/Open\s*Date[^\dA-Za-z]*(\d{1,2}\s*[A-Za-z]{3,9}(?:\s*\d{4})?)/i);
+            const closeM = txt.match(/Close\s*Date[^\dA-Za-z]*(\d{1,2}\s*[A-Za-z]{3,9}(?:\s*\d{4})?)/i);
+            const sizeM = txt.match(/(?:Issue\s*Size|Buyback\s*Size)[^\d₹]*₹?\s*([\d,.]+\s*Cr)/i);
+
+            list.push({
+              id: idx + 1,
+              company,
+              detailUrl: href.startsWith('http') ? href : 'https://investorzone.in' + href,
+              recordDate: recM ? recM[1] : 'TBA',
+              openDate: openM ? openM[1] : 'TBA',
+              closeDate: closeM ? closeM[1] : 'TBA',
+              buybackPrice: priceM ? '₹' + priceM[1] : 'Check Details',
+              cmp: cmpM ? '₹' + cmpM[1] : '-',
+              issueSize: sizeM ? '₹' + sizeM[1] : 'TBA',
+              type: /open\s*market/i.test(txt) ? 'Open Market' : 'Tender Offer',
+              logo: getLogoBadge(company, idx)
+            });
+          });
+        }
+
         allBuybacks = list;
         if (currentTab === 'BUYBACK') renderList();
       } catch (e) {}
@@ -478,7 +516,7 @@
       const box = document.getElementById('ipoList');
 
       if (!list.length) {
-        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">Syncing Live Buybacks from InvestorZone... Tap 🔄 to refresh.</div>`;
+        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">Syncing Live Buybacks... Tap 🔄 to refresh.</div>`;
         return;
       }
 
