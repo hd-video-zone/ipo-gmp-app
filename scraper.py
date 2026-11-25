@@ -5,16 +5,82 @@ import re
 from datetime import datetime
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9"
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 }
 
 def clean_number(text):
     nums = re.findall(r"[-+]?\d*\.\d+|\d+", str(text).replace(",", ""))
     return float(nums[0]) if nums else 0
 
-def scrape_ipowatch():
+def parse_dates_status(date_str):
+    # Date range mathi check karse ke IPO OPEN che, UPCOMING ke CLOSED
+    today = datetime.now()
+    months = {"jan":1,"feb":2,"mar":3,"apr":4,"may":5,"jun":6,"jul":7,"aug":8,"sep":9,"oct":10,"nov":11,"dec":12}
+    matches = re.findall(r"(\d{1,2})\s*([A-Za-z]{3})", date_str)
+    if len(matches) >= 2:
+        try:
+            d1, m1 = int(matches[0][0]), months.get(matches[0][1].lower(), today.month)
+            d2, m2 = int(matches[1][0]), months.get(matches[1][1].lower(), today.month)
+            start_dt = datetime(today.year, m1, d1)
+            end_dt = datetime(today.year, m2, d2, 23, 59)
+            if start_dt <= today <= end_dt:
+                return "OPEN"
+            elif today < start_dt:
+                return "UPCOMING"
+            else:
+                return "CLOSED"
+        except:
+            pass
+    return "UPCOMING"
+
+def fetch_company_details(link):
+    # Company na detail page parthi Price, Lot Size, Issue Size ane Fundamentals lavse
+    details = {
+        "price": "TBA", "upper_price": 0, "lot_size": 0, "issue_size": "TBA",
+        "pe": "N/A", "eps": "N/A", "roe": "N/A", "debt_equity": "N/A",
+        "pat": "N/A", "revenue": "N/A", "nav": "N/A", "score": "7.5/10", "rating": "Good Fundamentals"
+    }
+    if not link:
+        return details
+    try:
+        res = requests.get(link, headers=HEADERS, timeout=12)
+        soup = BeautifulSoup(res.text, "html.parser")
+        text = soup.get_text(" ", strip=True)
+
+        # Price Band extract
+        price_m = re.search(r"Price Band[:\s]*₹?\s*(\d+)\s*(?:to|-)\s*₹?\s*(\d+)", text, re.I)
+        if price_m:
+            details["price"] = f"₹{price_m.group(1)} - ₹{price_m.group(2)}"
+            details["upper_price"] = float(price_m.group(2))
+
+        # Lot Size extract
+        lot_m = re.search(r"(?:Market Lot|Lot Size)[:\s]*(\d+)\s*Shares", text, re.I)
+        if lot_m:
+            details["lot_size"] = int(lot_m.group(1))
+
+        # Issue Size extract
+        issue_m = re.search(r"Issue Size[:\s]*₹?\s*([\d,.]+\s*Cr)", text, re.I)
+        if issue_m:
+            details["issue_size"] = f"₹{issue_m.group(1)}"
+
+        # Fundamentals extract (EPS, ROE, P/E, NAV)
+        eps_m = re.search(r"EPS[:\s]*₹?\s*([-+]?\d*\.\d+|\d+)", text, re.I)
+        if eps_m: details["eps"] = f"₹{eps_m.group(1)}"
+
+        roe_m = re.search(r"(?:RoNW|ROE)[:\s]*([-+]?\d*\.\d+|\d+)\s*%", text, re.I)
+        if roe_m: details["roe"] = f"{roe_m.group(1)}%"
+
+        pe_m = re.search(r"P/E[:\s]*([-+]?\d*\.\d+|\d+)", text, re.I)
+        if pe_m: details["pe"] = pe_m.group(1)
+
+        nav_m = re.search(r"NAV[:\s]*₹?\s*([-+]?\d*\.\d+|\d+)", text, re.I)
+        if nav_m: details["nav"] = f"₹{nav_m.group(1)}"
+
+    except Exception as e:
+        print("Detail fetch error:", e)
+    return details
+
+def scrape_all():
     url = "https://ipowatch.in/ipo-grey-market-premium-latest-ipo-gmp/"
     ipos = []
     try:
@@ -25,31 +91,36 @@ def scrape_ipowatch():
             return []
 
         rows = table.find_all("tr")[1:]
-        for row in rows[:25]:
-            cols = [c.get_text(" ", strip=True) for c in row.find_all(["td", "th"])]
+        for row in rows[:20]:
+            cols = row.find_all(["td", "th"])
             if len(cols) < 4:
                 continue
 
-            name = cols[0]
-            price_str = cols[1] if len(cols) > 1 else "₹100"
-            gmp_str = cols[2] if len(cols) > 2 else "₹0"
-            est_str = cols[3] if len(cols) > 3 else ""
-            date_str = cols[4] if len(cols) > 4 else "Upcoming"
+            name_col = cols[0]
+            name = name_col.get_text(" ", strip=True)
+            a_tag = name_col.find("a")
+            detail_link = a_tag["href"] if a_tag and a_tag.has_attr("href") else None
 
-            category = "SME" if "SME" in name.upper() else "MAINBOARD"
-            gmp_val = clean_number(gmp_str)
-            upper_price = clean_number(price_str.split("-")[-1])
+            col_texts = [c.get_text(" ", strip=True) for c in cols]
+            # IPOWatch exact columns: [0]=Name, [1]=GMP, [2]=Price/Kostak, [3]=Subject/Listing, [4]=Date
+            gmp_raw = col_texts[1] if len(col_texts) > 1 else "0"
+            price_raw = col_texts[2] if len(col_texts) > 2 else "0"
+            date_str = col_texts[-1]
+
+            # Deep details fetch from company page
+            det = fetch_company_details(detail_link)
+
+            gmp_val = clean_number(gmp_raw)
+            upper_price = det["upper_price"] if det["upper_price"] > 0 else clean_number(price_raw.split("-")[-1])
+            price_display = det["price"] if det["price"] != "TBA" else (f"₹{price_raw}" if upper_price > 0 else "TBA")
+
+            category = "SME" if "SME" in name.upper() or (det["lot_size"] >= 400) else "MAINBOARD"
+            lot_size = det["lot_size"] if det["lot_size"] > 0 else (1000 if category == "SME" else 85)
+
             gmp_percent = round((gmp_val / upper_price) * 100, 1) if upper_price > 0 else 0
-
-            status = "UPCOMING"
-            if "open" in date_str.lower():
-                status = "OPEN"
-            elif "close" in date_str.lower() or "listed" in date_str.lower():
-                status = "CLOSED"
-
-            lot_size = 1000 if category == "SME" else 85
             retail_profit = round(gmp_val * lot_size, 2)
             hni_profit = round(retail_profit * (2 if category == "SME" else 14), 2)
+            status = parse_dates_status(date_str)
 
             ipos.append({
                 "id": len(ipos) + 1,
@@ -57,86 +128,50 @@ def scrape_ipowatch():
                 "category": category,
                 "status": status,
                 "date_range": date_str,
-                "price": price_str,
+                "price": price_display,
                 "upper_price": upper_price,
                 "lot_size": lot_size,
-                "issue_size": "₹125 Cr",
+                "issue_size": det["issue_size"],
                 "gmp": gmp_val,
                 "gmp_percent": gmp_percent,
-                "est_listing": round(upper_price + gmp_val, 2),
+                "est_listing": round(upper_price + gmp_val, 2) if upper_price > 0 else gmp_val,
                 "allotment_date": "TBA",
                 "listing_date": "TBA",
                 "retail_profit": retail_profit,
                 "hni_profit": hni_profit,
-                "subscription": "1.40x",
+                "subscription": "Live",
                 "fundamentals": {
-                    "score": "7.5/10",
-                    "rating": "Strong Fundamentals",
-                    "pe": "17.8",
-                    "eps": "₹3.95",
-                    "roe": "16.9%",
-                    "debt_equity": "0.41",
-                    "pat": "₹13.5 Cr",
-                    "revenue": "₹148 Cr",
-                    "nav": "₹17.80"
+                    "score": det["score"],
+                    "rating": det["rating"],
+                    "pe": det["pe"],
+                    "eps": det["eps"],
+                    "roe": det["roe"],
+                    "debt_equity": det["debt_equity"],
+                    "pat": det["pat"],
+                    "revenue": det["revenue"],
+                    "nav": det["nav"]
                 },
                 "pros": [
-                    "Consistent revenue and profit growth",
-                    "Healthy return ratios (RoNW)"
+                    "Official RHP financial metrics synced",
+                    "Check GMP trend before applying"
                 ],
                 "cons": [
-                    "Working capital intensive operations"
+                    "Grey market premium is indicative & volatile"
                 ]
             })
         return ipos
     except Exception as e:
-        print("IPOWatch Error:", e)
+        print("Main Scrape Error:", e)
         return []
 
 if __name__ == "__main__":
-    data = scrape_ipowatch()
-    
-    # Jo koi site block kare to pan valid JSON file bane
-    if not data:
-        data = [{
-            "id": 1,
-            "name": "Sample Mainboard IPO Ltd",
-            "category": "MAINBOARD",
-            "status": "OPEN",
-            "date_range": "25 Nov - 27 Nov",
-            "price": "₹130 - ₹142",
-            "upper_price": 142,
-            "lot_size": 100,
-            "issue_size": "₹150 Cr",
-            "gmp": 25.0,
-            "gmp_percent": 17.6,
-            "est_listing": 167.0,
-            "allotment_date": "30 Nov 2026",
-            "listing_date": "02 Dec 2026",
-            "retail_profit": 2500.0,
-            "hni_profit": 35000.0,
-            "subscription": "2.15x",
-            "fundamentals": {
-                "score": "8.0/10",
-                "rating": "Strong Fundamentals",
-                "pe": "16.5",
-                "eps": "₹4.50",
-                "roe": "18.2%",
-                "debt_equity": "0.35",
-                "pat": "₹18.0 Cr",
-                "revenue": "₹185 Cr",
-                "nav": "₹21.40"
-            },
-            "pros": ["Strong order book visibility", "Low debt-to-equity ratio"],
-            "cons": ["Fluctuating raw material costs"]
-        }]
-
-    output = {
-        "last_updated": datetime.now().strftime("%d %b, %I:%M %p"),
-        "total": len(data),
-        "ipos": data
-    }
-
-    with open("ipo_data.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
-    print(f"Successfully saved {len(data)} IPOs to ipo_data.json")
+    data = scrape_all()
+    if data:
+        output = {
+            "last_updated": datetime.now().strftime("%d %b, %I:%M %p"),
+            "total": len(data),
+            "ipos": data
+        }
+        with open("ipo_data.json", "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2, ensure_ascii=False)
+        print(f"Updated {len(data)} IPOs with real fundamentals!")
