@@ -86,7 +86,7 @@
     <div class="text-center py-12 text-gray-400 text-sm">Loading Live Data...</div>
   </main>
 
-  <!-- Full Detail Screen Modal (For Both IPO & Buyback) -->
+  <!-- Full Detail Screen Modal -->
   <div id="detailScreen" class="fixed inset-0 bg-[#f2f4f7] z-50 hidden flex-col max-w-md mx-auto overflow-y-auto">
     <div class="bg-white sticky top-0 px-3 py-2.5 border-b flex items-center justify-between z-20 shadow-sm gap-2">
       <button onclick="closeDetail()" class="flex items-center gap-1 bg-gray-100 active:bg-gray-200 px-3.5 py-2 rounded-xl font-bold text-sm text-gray-800 shrink-0">
@@ -215,7 +215,7 @@
     function isValidRealLogo(url) {
       if (!url) return false;
       const low = url.toLowerCase();
-      if (/investorgain-logo|chittorgarh|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads|default/i.test(low)) {
+      if (/investorgain-logo|chittorgarh|investorzone|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads|default/i.test(low)) {
         return false;
       }
       return /\.(png|jpg|jpeg|webp|svg)/i.test(low);
@@ -277,38 +277,39 @@
         const res = await fetch(`${WORKER_URL}?mode=buyback&t=${Date.now()}`);
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        const table = doc.querySelector('table');
-        if (!table) return;
+        const tables = Array.from(doc.querySelectorAll('table'));
+        let bestTable = tables.find(t => t.innerText.toLowerCase().includes('record date') || t.innerText.toLowerCase().includes('buyback price')) || tables[0];
+        if (!bestTable) return;
 
-        const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th')).map(th => th.innerText.trim().toLowerCase());
+        const headers = Array.from(bestTable.querySelectorAll('thead th, tr:first-child th, tr:first-child td')).map(th => th.innerText.trim().toLowerCase());
         const findCol = (keys, fallback) => {
           const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
           return idx !== -1 ? idx : fallback;
         };
 
-        const idxComp = findCol(['company', 'name'], 0);
+        const idxComp = findCol(['company', 'name', 'stock'], 0);
         const idxRec = findCol(['record'], 1);
         const idxOpen = findCol(['open'], 2);
         const idxClose = findCol(['close'], 3);
-        const idxPrice = findCol(['buyback price', 'price'], 4);
-        const idxCmp = findCol(['cmp', 'market'], 5);
+        const idxPrice = findCol(['buyback price', 'offer price', 'price'], 4);
+        const idxCmp = findCol(['cmp', 'market', 'current'], 5);
         const idxSize = findCol(['size', 'amount'], 6);
-        const idxType = findCol(['type', 'mode'], 7);
+        const idxType = findCol(['type', 'mode', 'status'], 7);
 
-        const rows = table.querySelectorAll('tbody tr');
+        const rows = bestTable.querySelectorAll('tbody tr, tr');
         const list = [];
         rows.forEach((tr, idx) => {
           const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
           if (cols.length < 4) return;
           const company = (cols[idxComp] || '').replace(/\s+/g, ' ').trim();
-          if (!company || company.toLowerCase().includes('company')) return;
+          if (!company || /company|stock name/i.test(company)) return;
 
           const linkEl = tr.querySelector('a[href]');
           let detailUrl = '';
           if (linkEl) {
             const href = linkEl.getAttribute('href') || '';
             if (href.startsWith('http')) detailUrl = href;
-            else if (href.startsWith('/')) detailUrl = 'https://www.investorgain.com' + href;
+            else if (href.startsWith('/')) detailUrl = 'https://investorzone.in' + href;
           }
 
           list.push({
@@ -477,7 +478,7 @@
       const box = document.getElementById('ipoList');
 
       if (!list.length) {
-        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">No Live Buyback issues found right now. Tap 🔄 to refresh.</div>`;
+        box.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">Syncing Live Buybacks from InvestorZone... Tap 🔄 to refresh.</div>`;
         return;
       }
 
