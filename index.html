@@ -143,7 +143,7 @@
     let allIpos = [];
     let currentTab = 'OPEN';
     let savedNames = JSON.parse(localStorage.getItem('savedIpos') || '[]');
-    let logoCache = JSON.parse(localStorage.getItem('logoCache_v4') || '{}');
+    let logoCache = JSON.parse(localStorage.getItem('logoCache_v5') || '{}');
     let activeCalcIpo = null;
     let calcLots = 1;
 
@@ -211,7 +211,7 @@
     function isValidRealLogo(url) {
       if (!url) return false;
       const low = url.toLowerCase();
-      if (/investorgain-logo|chittorgarh|investorzone|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads|default/i.test(low)) {
+      if (/investorgain-logo|ig-logo|playstore|appstore|google|facebook|twitter|whatsapp|telegram|arrow|spinner|loader|banner|ads|favicon/i.test(low)) {
         return false;
       }
       return /\.(png|jpg|jpeg|webp|svg)/i.test(low);
@@ -264,7 +264,6 @@
       return 'UPCOMING';
     }
 
-    // Background mein automatically sabhi IPOs ke detail pages se real company logos fetch karna
     async function autoFetchAllLogos(ipos) {
       for (const ipo of ipos) {
         if (logoCache[ipo.name]) continue;
@@ -428,11 +427,11 @@
         const rawSrc = img.getAttribute('data-src') || img.getAttribute('src') || '';
         const alt = (img.getAttribute('alt') || '').toLowerCase();
         const firstWord = companyName.split(' ')[0].toLowerCase();
-        if (rawSrc && (alt.includes(firstWord) || /ipo_logo|company|upload/i.test(rawSrc))) {
+        if (rawSrc && (alt.includes(firstWord) || /\/ipo\/|\/company\/|\/logo\/|upload/i.test(rawSrc))) {
           const fullLogo = rawSrc.startsWith('http') ? rawSrc : 'https://www.investorgain.com' + (rawSrc.startsWith('/') ? '' : '/') + rawSrc;
           if (isValidRealLogo(fullLogo)) {
             logoCache[companyName] = fullLogo;
-            localStorage.setItem('logoCache_v4', JSON.stringify(logoCache));
+            localStorage.setItem('logoCache_v5', JSON.stringify(logoCache));
             const box = document.getElementById('detailLogoBox');
             if (box) box.innerHTML = `<img src="${fullLogo}" class="w-10 h-10 object-contain">`;
             renderList();
